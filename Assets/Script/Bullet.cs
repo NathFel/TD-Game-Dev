@@ -8,6 +8,8 @@ public class Bullet : MonoBehaviour
     public float speed = 70f;
     public GameObject impactEffect;
 
+    public float AoERadius = 0f;
+
     public void Seek(Transform _target)
     {
         target = _target;
@@ -31,14 +33,46 @@ public class Bullet : MonoBehaviour
         }
 
         transform.Translate(dir.normalized * distanceThisFrame, Space.World);
+        transform.LookAt(target);
     }
 
     void HitTarget()
     {
-        GameObject effectIns = (GameObject)Instantiate(impactEffect, transform.position, transform.rotation);
+        GameObject effectIns = Instantiate(impactEffect, transform.position, transform.rotation);
         Destroy(effectIns, 2f);
 
-        Destroy(target.gameObject);
+        if (AoERadius > 0f)
+        {
+            AoE();
+        }
+        else
+        {
+            Damage(target);
+        }
+
         Destroy(gameObject); 
+    }
+
+    void AoE()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, AoERadius);
+        foreach (Collider c in colliders)
+        {
+            if (c.CompareTag("Enemy"))
+            {
+                Damage(c.transform);
+            }
+        }
+    }
+
+    void Damage(Transform enemy)
+    {
+        Destroy(enemy.gameObject);
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, AoERadius);
     }
 }
