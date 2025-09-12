@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d061559bb9b778e4590ae51f7865b42d, type: 3}
+  m_Name: Missile Turret 1
+  m_EditorClassIdentifier: 
+  cardName: Missile Launcher
+  artwork: {fileID: 21300000, guid: a2d0b34c5e3b73748817e7a9bd12aecc, type: 3}
+  description: '-'
+  cardType: 0
+  towerPrefab: {fileID: 43144752293622142, guid: 0b9a61bd01441d442a68d6743f80f301, type: 3}
+  cost: 100
+  upgradeLevel: 0
+  spellPower: 0
+  spellDuration: 0
