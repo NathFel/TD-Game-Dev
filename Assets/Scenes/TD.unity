@@ -3302,8 +3302,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHandSize: 7
-  startingHandCount: 3
-  handDrawPerRound: 1
+  startingHandCount: 5
+  handDrawPerRound: 5
   maxDeckSize: 20
   startingDeck:
   - {fileID: 11400000, guid: 26c91c723afeb3346966c83e717735b3, type: 2}
@@ -3313,16 +3313,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
   - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
   - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
-  - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
-  - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
-  - {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
+  - {fileID: 11400000, guid: 26bccd7399ab5bc49b1fbb1d912d5def, type: 2}
+  - {fileID: 11400000, guid: 26bccd7399ab5bc49b1fbb1d912d5def, type: 2}
+  - {fileID: 11400000, guid: 26bccd7399ab5bc49b1fbb1d912d5def, type: 2}
   currentDeck: []
   drawPile: []
   hand: []
   discardPile: []
   handPanel: {fileID: 590101035}
   cardUIPrefab: {fileID: 7383986933388705844, guid: 297311c7ce86f6041a765af9c35b77b4, type: 3}
-  maxWave: 5
+  maxWave: 2
 --- !u!4 &1156521174
 Transform:
   m_ObjectHideFlags: 0
@@ -3463,6 +3463,7 @@ GameObject:
   - component: {fileID: 1254304768}
   - component: {fileID: 1254304770}
   - component: {fileID: 1254304773}
+  - component: {fileID: 1254304774}
   m_Layer: 0
   m_Name: EventManager
   m_TagString: Untagged
@@ -3525,6 +3526,18 @@ MonoBehaviour:
   waveIncrementMoney: 1
   startingEnemyCount: 5
   spawnInterval: 2
+--- !u!114 &1254304774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254304766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: babf4cb0d326e6f4a9cda9c8088a9047, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1283341439
 PrefabInstance:
   m_ObjectHideFlags: 0

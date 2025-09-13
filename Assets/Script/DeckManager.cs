@@ -34,8 +34,8 @@ public class DeckManager : MonoBehaviour
     private bool isPlacing = false;
     private CardUI placingCardUI = null;
 
-    private int currentRound = 1; // Incremented before shop
-    private int currentWave = 1;  // Incremented within round
+    private int currentRound = 1;
+    private int currentWave = 1;
     private GamePhase currentPhase;
 
     private bool firstDrawThisRound = true;
@@ -55,13 +55,15 @@ public class DeckManager : MonoBehaviour
         switch (phase)
         {
             case GamePhase.DrawAndBuild:
+                DiscardHand();   // 🔹 Always discard before drawing
                 DrawHand();
                 break;
             case GamePhase.Shop:
-                ShopManager.Instance.OpenShop(OnShopClosed);
+                if (ShopManager.Instance != null)
+                    ShopManager.Instance.OpenShop(OnShopClosed);
                 break;
             case GamePhase.EnemyWave:
-                // Enemy waves start via StartWaveButton
+                // Enemy waves triggered manually by button
                 break;
         }
     }
@@ -115,6 +117,16 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    private void DiscardHand()
+    {
+        foreach (var card in hand)
+            discardPile.Add(card);
+        hand.Clear();
+
+        foreach (Transform child in handPanel)
+            Destroy(child.gameObject);
+    }
+
     public void RequestPlayCard(Card card, CardUI cardUI)
     {
         if (card == null || cardUI == null) return;
@@ -127,11 +139,7 @@ public class DeckManager : MonoBehaviour
                 return;
             }
 
-            if (isPlacing)
-            {
-                Debug.Log("Already placing a tower.");
-                return;
-            }
+            if (isPlacing) return;
 
             isPlacing = true;
             placingCardUI = cardUI;
@@ -145,27 +153,28 @@ public class DeckManager : MonoBehaviour
         }
         else if (card.cardType == Card.CardType.Spell)
         {
-            if (currentPhase == GamePhase.EnemyWave)
+            if (currentPhase != GamePhase.EnemyWave)
             {
-                Debug.Log("Cast Spell card: " + card.cardName);
-                OnCardPlaced(card);
+                Debug.Log("Spells can only be used during Enemy Wave phase.");
+                return;
             }
-            else
-            {
-                Debug.Log("Spells can only be used during the Enemy Wave phase.");
-            }
+
+            if (isPlacing) return;
+
+            isPlacing = true;
+            placingCardUI = cardUI;
+            placingCardUI.SetInteractable(false);
+
+            SpellPlacementManager.Instance.StartPlacingSpell(
+                card,
+                onPlaced: () => OnCardPlaced(card),
+                onCanceled: () => OnPlacementCanceled()
+            );
         }
         else if (card.cardType == Card.CardType.Upgrade)
         {
             if (currentPhase == GamePhase.DrawAndBuild)
-            {
-                Debug.Log("Apply Upgrade card: " + card.cardName);
                 OnCardPlaced(card);
-            }
-            else
-            {
-                Debug.Log("Upgrades can only be used during the Build phase.");
-            }
         }
     }
 
@@ -210,12 +219,17 @@ public class DeckManager : MonoBehaviour
         if (currentPhase == GamePhase.DrawAndBuild)
         {
             StartPhase(GamePhase.EnemyWave);
-            EnemyWaveManager.Instance.StartWave(currentRound, currentWave, OnWaveComplete);
+            if (EnemyWaveManager.Instance != null)
+                EnemyWaveManager.Instance.StartWave(currentRound, currentWave, OnWaveComplete);
         }
     }
 
     private void OnWaveComplete()
     {
+        // Cleanup hand + board
+        DiscardHand();
+        ClearBoard();
+
         currentWave++;
 
         if (currentWave > maxWave)
@@ -224,10 +238,9 @@ public class DeckManager : MonoBehaviour
             firstDrawThisRound = true;
 
             CollectAllCardsToDeck();
-
             StartPhase(GamePhase.Shop);
 
-            currentWave = 1; // reset wave for new round
+            currentWave = 1; // reset for next round
         }
         else
         {
@@ -235,13 +248,15 @@ public class DeckManager : MonoBehaviour
         }
     }
 
+    private void ClearBoard()
+    {
+        Node[] nodes = FindObjectsOfType<Node>();
+        foreach (Node node in nodes)
+            node?.ClearNode();
+    }
+
     private void CollectAllCardsToDeck()
     {
-        foreach (var card in hand)
-            if (!currentDeck.Contains(card))
-                currentDeck.Add(card);
-        hand.Clear();
-
         foreach (var card in discardPile)
             if (!currentDeck.Contains(card))
                 currentDeck.Add(card);
@@ -258,10 +273,12 @@ public class DeckManager : MonoBehaviour
 
     private void OnShopClosed()
     {
+        // After shop: reshuffle, then draw fresh hand for Wave 1
+        ShuffleDrawPile();
         StartPhase(GamePhase.DrawAndBuild);
     }
 
-    // ===== Optional: Debug / UI methods =====
+    // ===== Debug / UI =====
     public void ShowCurrentDeck(Transform panel)
     {
         foreach (Transform child in panel) Destroy(child.gameObject);

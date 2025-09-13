@@ -36,8 +36,9 @@ public class PlacementManager : MonoBehaviour
     {
         if (objectToPlace == null || node.HasObject()) return;
 
-        Instantiate(objectToPlace, node.GetBuildPosition(), Quaternion.identity);
-        node.SetOccupied(true);
+        GameObject placed = Instantiate(objectToPlace, node.GetBuildPosition(), Quaternion.identity);
+
+        node.SetOccupied(true, placed);
 
         objectToPlace = null;
 

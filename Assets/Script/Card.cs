@@ -15,8 +15,11 @@ public class Card : ScriptableObject
     public int upgradeLevel = 0; // if it’s an upgrade card
 
     [Header("Spell Data")]
-    public int spellPower = 0; // could scale damage/healing
+    public GameObject spellPrefab;
+    public int spellPower = 0; 
     public float spellDuration = 0f;
+    public float spellRadius = 0f;
+    public float spellSpeed = 0f;
 
     public enum CardType
     {
