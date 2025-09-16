@@ -1,76 +1,211 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 
+[RequireComponent(typeof(EnemyHealthUI))]
 public class Enemy : MonoBehaviour
 {
-    public float speed = 10f;
-    public int health = 100;
-    
-    public int moneyDrop = 50;
+    [Header("Enemy Data")]
+    public EnemyTypeDataSO enemyType;
 
-    private Transform target;
-    private int wavepointIndex = 0;
+    [Header("Stats")]
+    [SerializeField] private float speed = 10f;
+    [SerializeField] private int baseHealth = 100;
+    [SerializeField] private int moneyDrop = 50;
 
+    [HideInInspector] public int wavepointIndex = 0;
+    [HideInInspector] public float segmentProgress = 0f;
+
+    [Header("Effects")]
     public GameObject deathEffect;
-    
-    void Start()
-    { 
-        target = Waypoints.points[0];
+    public GameObject burnEffectPrefab;
+
+    // --- Burn system variables ---
+    private bool isBurning = false;
+    private int currentBurnDamage = 0;
+    private float burnInterval = 1f;   // Enemy-defined
+    private float burnDuration = 5f;   // Enemy-defined
+    private float burnTimeElapsed = 0f;
+    private int queuedBurnDamage = 0;
+    private GameObject activeBurnEffect;
+    private Coroutine burnCoroutine;
+
+    private int currentHealth;
+    private int maxHealth;
+    private Transform startPoint;
+    private Transform endPoint;
+    private EnemyHealthUI healthUI;
+
+    public int Health => currentHealth;
+    public int MaxHealth => maxHealth;
+    public float Speed => speed;
+    public int MoneyDrop => moneyDrop;
+
+    void Awake()
+    {
+        healthUI = GetComponent<EnemyHealthUI>();
+        maxHealth = enemyType != null ? Mathf.RoundToInt(baseHealth * enemyType.healthMultiplier) : baseHealth;
+        currentHealth = maxHealth;
+        healthUI?.SetMaxHealth(maxHealth);
     }
 
-    public void TakeDamage (int amount)
+    void OnEnable()
     {
-        health -= amount;
+        EnemyWaveManager.Instance.RegisterEnemy(this);
 
-        if (health <= 0) {
-            Die();
+        if (Waypoints.points.Length > 0)
+        {
+            wavepointIndex = 0;
+            startPoint = Waypoints.points[0];
+            endPoint = Waypoints.points[1];
+        }
+    }
+
+    void Update()
+    {
+        MoveAlongPath();
+    }
+
+    void MoveAlongPath()
+    {
+        if (wavepointIndex >= Waypoints.points.Length - 1) return;
+
+        float segmentLength = Vector3.Distance(startPoint.position, endPoint.position);
+        segmentProgress += (speed * Time.deltaTime) / segmentLength;
+
+        if (segmentProgress >= 1f)
+        {
+            segmentProgress = 0f;
+            wavepointIndex++;
+
+            if (wavepointIndex >= Waypoints.points.Length - 1)
+            {
+                EndPath();
+                return;
+            }
+
+            startPoint = Waypoints.points[wavepointIndex];
+            endPoint = Waypoints.points[wavepointIndex + 1];
+        }
+
+        transform.position = Vector3.Lerp(startPoint.position, endPoint.position, segmentProgress);
+        Vector3 dir = (endPoint.position - startPoint.position).normalized;
+        if (dir != Vector3.zero)
+            transform.rotation = Quaternion.LookRotation(dir);
+    }
+
+    public void TakeDamage(int amount)
+    {
+        currentHealth -= amount;
+        currentHealth = Mathf.Max(currentHealth, 0);
+        healthUI?.UpdateHealth(currentHealth);
+
+        if (currentHealth <= 0) Die();
+    }
+
+    public void ApplyBurn(int damage)
+    {
+        if (isBurning)
+        {
+            if (damage > currentBurnDamage)
+            {
+                currentBurnDamage = damage;
+                burnTimeElapsed = 0f;
+            }
+            else
+            {
+                burnTimeElapsed = 0f;
+            }
+            return;
+        }
+    StartBurn(damage);
+    }
+
+    private void StartBurn(int damage)
+    {
+        currentBurnDamage = damage;
+        burnTimeElapsed = 0f;
+
+        if (burnEffectPrefab != null && activeBurnEffect == null)
+            activeBurnEffect = Instantiate(burnEffectPrefab, transform.position, Quaternion.identity, transform);
+
+        isBurning = true;
+        burnCoroutine = StartCoroutine(BurnRoutine());
+    }
+
+    private IEnumerator BurnRoutine()
+    {
+        while (isBurning)
+        {
+            TakeDamage(currentBurnDamage);
+
+            if (activeBurnEffect != null)
+                activeBurnEffect.transform.position = transform.position;
+
+            burnTimeElapsed += burnInterval;
+
+            if (burnTimeElapsed >= burnDuration)
+            {
+                StopBurn();
+                yield break;
+            }
+
+            yield return new WaitForSeconds(burnInterval);
+        }
+    }
+
+    public void StopBurn()
+    {
+        if (burnCoroutine != null)
+            StopCoroutine(burnCoroutine);
+
+        burnCoroutine = null;
+        isBurning = false;
+        currentBurnDamage = 0;
+
+        if (activeBurnEffect != null)
+        {
+            Destroy(activeBurnEffect);
+            activeBurnEffect = null;
         }
     }
 
     void Die()
     {
-        GameObject effect = (GameObject)Instantiate(deathEffect, transform.position, Quaternion.identity);
+        if (deathEffect != null)
+        {
+            GameObject effect = Instantiate(deathEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 5f);
+        }
 
-        Destroy(effect, 5f);
-  
-        // Notify wave manager
-        EnemyWaveManager.Instance.EnemyDied();
-
-        PlayerStats.Money += moneyDrop;
+        StopBurn();
+        EnemyWaveManager.Instance.EnemyDied(this);
+        EnemyWaveManager.Instance.UnregisterEnemy(this);
         Destroy(gameObject);
     }
 
-    void Update()
-    {
-        Vector3 dir = target.position - transform.position;
-        transform.Translate(dir.normalized * speed * Time.deltaTime, Space.World);
-
-        if (Vector3.Distance(transform.position, target.position) <= 0.4f) {
-            GetNextWaypoint();
-        }
-    }
-
-    void GetNextWaypoint()
-    {
-        if (wavepointIndex >= Waypoints.points.Length - 1) { 
-            EndPath();
-            return; 
-        }
-
-        wavepointIndex++;
-        target = Waypoints.points[wavepointIndex];
-
-        Vector3 direction = (target.position - transform.position).normalized;
-        Quaternion lookRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Euler(0f, lookRotation.eulerAngles.y, 0f);
-    }
-
-    void EndPath ()
+    void EndPath()
     {
         PlayerStats.Hp--;
-        // Notify wave manager
-        EnemyWaveManager.Instance.EnemyDied();
+        EnemyWaveManager.Instance.UnregisterEnemy(this);
+        EnemyWaveManager.Instance.EnemyDied(this);
         Destroy(gameObject);
+    }
+
+    public float GetPathProgress()
+    {
+        return wavepointIndex + segmentProgress;
+    }
+
+    public void SetStats(float newSpeed, int newBaseHealth, int newMoney, EnemyTypeDataSO type)
+    {
+        speed = newSpeed;
+        baseHealth = newBaseHealth;
+        moneyDrop = newMoney;
+        enemyType = type;
+
+        maxHealth = Mathf.RoundToInt(baseHealth * (enemyType != null ? enemyType.healthMultiplier : 1f));
+        currentHealth = maxHealth;
+
+        healthUI?.SetMaxHealth(maxHealth);
     }
 }

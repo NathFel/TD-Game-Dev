@@ -12,22 +12,26 @@ public class EnemyWaveManager : MonoBehaviour
     public List<EnemyTypeDataSO> enemyTypes;
 
     [Header("Wave Base Stats")]
-    public float baseHealth = 100f;
+    public int baseHealth = 100;
     public float baseSpeed = 1f;
-    public float baseMoney = 10f;
+    public int baseMoney = 10;
 
     [Header("Wave Scaling")]
-    public float roundMultiplier = 1.5f;   // multiplicative per round
-    public float waveIncrementHealth = 10f; // additive per wave
-    public float waveIncrementSpeed = 0.1f; 
+    public float roundMultiplier = 1.5f;
+    public float waveIncrementHealth = 10f;
+    public float waveIncrementSpeed = 0.1f;
     public float waveIncrementMoney = 1f;
 
     [Header("Wave Settings")]
     public int startingEnemyCount = 5;
     public float spawnInterval = 1f;
 
-    private int enemiesAlive = 0;
+    [HideInInspector] public List<Enemy> activeEnemies = new List<Enemy>();
+
     private Action onWaveComplete;
+
+    // NEW: Track remaining enemies to spawn
+    private int enemiesRemainingToSpawn = 0;
 
     private void Awake()
     {
@@ -42,20 +46,19 @@ public class EnemyWaveManager : MonoBehaviour
     public void StartWave(int roundNumber, int waveNumber, Action onComplete)
     {
         onWaveComplete = onComplete;
-        int enemyCount = Mathf.RoundToInt(startingEnemyCount * (1 + 0.5f * (waveNumber - 1)));
-        StartCoroutine(SpawnWave(enemyCount, roundNumber, waveNumber));
+        enemiesRemainingToSpawn = Mathf.RoundToInt(startingEnemyCount * (1 + 0.5f * (waveNumber - 1)));
+        StartCoroutine(SpawnWave(enemiesRemainingToSpawn, roundNumber, waveNumber));
     }
 
     private IEnumerator SpawnWave(int count, int roundNumber, int waveNumber)
     {
-        enemiesAlive = count;
-
         for (int i = 0; i < count; i++)
         {
             EnemyTypeDataSO enemyData = GetRandomEnemy(roundNumber);
             if (enemyData != null)
                 SpawnEnemy(enemyData, roundNumber, waveNumber);
 
+            enemiesRemainingToSpawn--;
             yield return new WaitForSeconds(spawnInterval);
         }
     }
@@ -65,7 +68,6 @@ public class EnemyWaveManager : MonoBehaviour
         List<EnemyTypeDataSO> available = enemyTypes.FindAll(e => currentRound >= e.minRoundToSpawn);
         if (available.Count == 0) return null;
 
-        // Weighted random selection
         float totalWeight = 0f;
         foreach (var e in available) totalWeight += e.spawnWeight;
 
@@ -86,23 +88,47 @@ public class EnemyWaveManager : MonoBehaviour
         Enemy enemy = obj.GetComponent<Enemy>();
         if (enemy == null) return;
 
-        // Centralized scaling
-        float scaledHealth = baseHealth * Mathf.Pow(roundMultiplier, roundNumber - 1) + waveIncrementHealth * (waveNumber - 1);
         float scaledSpeed = baseSpeed * Mathf.Pow(roundMultiplier, roundNumber - 1) + waveIncrementSpeed * (waveNumber - 1);
-        float scaledMoney = baseMoney * Mathf.Pow(roundMultiplier, roundNumber - 1) + waveIncrementMoney * (waveNumber - 1);
+        int scaledHealth = Mathf.RoundToInt(baseHealth * Mathf.Pow(roundMultiplier, roundNumber - 1) + waveIncrementHealth * (waveNumber - 1));
+        int scaledMoney = Mathf.RoundToInt(baseMoney * Mathf.Pow(roundMultiplier, roundNumber - 1) + waveIncrementMoney * (waveNumber - 1));
 
-        // Apply enemy type multiplier
-        enemy.health = Mathf.RoundToInt(scaledHealth * data.healthMultiplier);
-        enemy.speed = scaledSpeed * data.speedMultiplier;
-        enemy.moneyDrop = Mathf.RoundToInt(scaledMoney * data.moneyMultiplier);
+        enemy.SetStats(scaledSpeed * data.speedMultiplier, scaledHealth, Mathf.RoundToInt(scaledMoney * data.moneyMultiplier), data);
 
         obj.SetActive(true);
     }
 
-    public void EnemyDied()
+    public void EnemyDied(Enemy enemy)
     {
-        enemiesAlive--;
-        if (enemiesAlive <= 0 && onWaveComplete != null)
+        // Only remove if still active
+        if (!activeEnemies.Contains(enemy)) return;
+
+        activeEnemies.Remove(enemy);
+        CheckWaveComplete();
+    }
+
+    public void RegisterEnemy(Enemy enemy)
+    {
+        if (!activeEnemies.Contains(enemy))
+            activeEnemies.Add(enemy);
+    }
+
+    public void UnregisterEnemy(Enemy enemy)
+    {
+        if (activeEnemies.Contains(enemy))
+            activeEnemies.Remove(enemy);
+
+        CheckWaveComplete();
+    }
+
+    private void CheckWaveComplete()
+    {
+        // Wave is complete only if:
+        // 1. No active enemies, AND
+        // 2. No more enemies left to spawn
+        if (activeEnemies.Count == 0 && enemiesRemainingToSpawn <= 0 && onWaveComplete != null)
+        {
             onWaveComplete.Invoke();
+            onWaveComplete = null;
+        }
     }
 }

@@ -1,84 +1,116 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
     private Transform target;
-    public float speed = 70f;
+    private int damage;
+    private float speed;
+
+    private bool isSeeking;
+    private int piercesLeft;
+    private int bouncesLeft;
+    private float AoERadius;
+    private float bounceRadius = 1000f;
+
+    private Vector3 direction;
+
     public GameObject impactEffect;
-    public int bulletDamage = 50;
 
-    public float AoERadius = 0f;
+    private float lifetime = 5f;
 
-    public void Seek(Transform _target)
+    public event System.Action<Enemy> onHitEnemy;
+
+    public void SetStats(Transform _target, int _damage, float _speed, TowerData data)
     {
         target = _target;
+        damage = _damage;
+        speed = _speed;
+
+        if (data != null)
+        {
+            isSeeking = data.isSeeking;
+            piercesLeft = data.pierce;
+            bouncesLeft = data.bounce;
+            AoERadius = data.AoERadius;
+        }
+
+        direction = (target != null) ? (target.position - transform.position).normalized : transform.forward;
     }
 
     void Update()
     {
-        if (target == null)
+        lifetime -= Time.deltaTime;
+        if (lifetime <= 0f)
         {
             Destroy(gameObject);
             return;
         }
 
-        Vector3 dir = target.position - transform.position;
-        float distanceThisFrame = speed * Time.deltaTime;
-
-        if (dir.magnitude <= distanceThisFrame)
+        if (target == null && isSeeking)
         {
-            HitTarget();
+            Destroy(gameObject);
             return;
         }
 
-        transform.Translate(dir.normalized * distanceThisFrame, Space.World);
-        transform.LookAt(target);
+        if (isSeeking && target != null)
+            direction = (target.position - transform.position).normalized;
+
+        transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        transform.LookAt(transform.position + direction);
     }
 
-    void HitTarget()
+    void OnTriggerEnter(Collider other)
     {
-        GameObject effectIns = Instantiate(impactEffect, transform.position, transform.rotation);
-        Destroy(effectIns, 2f);
+        if (!other.CompareTag("Enemy")) return;
 
-        if (AoERadius > 0f)
+        Damage(other.transform);
+
+        lifetime = 5f;
+
+        if (piercesLeft > 0)
         {
-            AoE();
-        }
-        else
-        {
-            Damage(target);
+            piercesLeft--;
+            return;
         }
 
-        Destroy(gameObject); 
+        if (AoERadius > 0f) AoE();
+
+        if (!HandleBounce(other.transform)) Destroy(gameObject);
     }
 
     void AoE()
     {
         Collider[] colliders = Physics.OverlapSphere(transform.position, AoERadius);
         foreach (Collider c in colliders)
-        {
-            if (c.CompareTag("Enemy"))
-            {
-                Damage(c.transform);
-            }
-        }
+            if (c.CompareTag("Enemy")) Damage(c.transform);
     }
 
     void Damage(Transform enemy)
     {
         Enemy e = enemy.GetComponent<Enemy>();
-
         if (e != null)
         {
-            e.TakeDamage(bulletDamage);
+            e.TakeDamage(damage);
+            onHitEnemy?.Invoke(e);
         }
     }
 
-    void OnDrawGizmos()
+    bool HandleBounce(Transform lastHit)
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, AoERadius);
+        if (bouncesLeft <= 0) return false;
+
+        Collider[] colliders = Physics.OverlapSphere(transform.position, bounceRadius);
+        foreach (Collider c in colliders)
+        {
+            if (c.CompareTag("Enemy") && c.transform != lastHit)
+            {
+                target = c.transform;
+                direction = (target.position - transform.position).normalized;
+                bouncesLeft--;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

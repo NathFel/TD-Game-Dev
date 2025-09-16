@@ -1,116 +1,213 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Turret : MonoBehaviour
 {
     private Transform target;
+    private float laserDamageAccum = 0f;
 
+    [Header("References")]
     public Transform partToRotate;
-    public string enemyTag = "Enemy"; 
-    public float turnSpeed = 10f;
-    public float yRotationOffset = 0f;
-    public GameObject bulletPrefab;
     public Transform firePoint;
-
-    [Header("Bullett")]
-    public float range = 15f;
-    public float fireRate = 1f;
-    private float fireCountdown = 0f;
-
-    [Header("Laser")]
-    public bool useLaser = false;
-    public LineRenderer LineRenderer;
+    public LineRenderer lineRenderer;
     public ParticleSystem impactEffect;
 
-    void Start()
+    [Header("Turret Settings")]
+    public TargetingMode targetingMode = TargetingMode.Closest;
+    public float yRotationOffset = 90f;
+
+    [Header("Card Settings")]
+    public Card turretCard;
+    private float fireCountdown = 0f;
+
+    public enum TargetingMode
     {
-        InvokeRepeating("UpdateTarget", 0f, 0.5f);
-    }
-
-    void UpdateTarget()
-    {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        float shortestDistance = Mathf.Infinity;
-        GameObject nearestEnemy = null;
-
-        foreach (GameObject enemy in enemies) {
-            float distanceToEnemy = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distanceToEnemy < shortestDistance) {
-                shortestDistance = distanceToEnemy;
-                nearestEnemy = enemy;
-            }
-        }
-
-        if (nearestEnemy != null && shortestDistance <= range) {
-            target = nearestEnemy.transform;
-        } else {
-            target = null;
-        }
+        TargetFirst,
+        HighestHP,
+        Closest,
+        TargetLast
     }
 
     void Update()
     {
+        if (turretCard == null || turretCard.towerData == null) return;
+
+        // Acquire target if null, dead, or out of range
+        if (target == null || !EnemyWaveManager.Instance.activeEnemies.Contains(target.GetComponent<Enemy>()) ||
+            Vector3.Distance(transform.position, target.position) > turretCard.towerData.range)
+        {
+            UpdateTarget();
+        }
+
         if (target == null)
         {
-            if(useLaser)
-            {
-                if(LineRenderer.enabled)
-                {
-                    LineRenderer.enabled = false;
-                    impactEffect.Stop();
-                }
-            }
+            DisableLaser();
             return;
         }
+
         LockOnTarget();
 
-        if (useLaser)
+        if (turretCard.towerData.useLaser)
         {
             Laser();
-        }else
+        }
+        else
         {
-            if (fireCountdown <= 0f) {
-                Shoot();
-                fireCountdown = 1f / fireRate;
-            }
-
             fireCountdown -= Time.deltaTime;
+            if (fireCountdown <= 0f)
+            {
+                Shoot();
+                fireCountdown = 1f / Mathf.Max(turretCard.towerData.fireRate, 0.01f);
+            }
         }
     }
 
-    void Laser() {
-        if(!LineRenderer.enabled)
+    void UpdateTarget()
+    {
+        List<Enemy> enemies = EnemyWaveManager.Instance.activeEnemies;
+        if (enemies.Count == 0)
         {
-            LineRenderer.enabled = true;
-            impactEffect.Play();
+            target = null;
+            return;
         }
-        LineRenderer.SetPosition(0, firePoint.position);
-        LineRenderer.SetPosition(1, target.position);
 
-        impactEffect.transform.position = target.position;
+        Enemy chosen = null;
+        float bestValue = (targetingMode == TargetingMode.Closest || targetingMode == TargetingMode.TargetLast)
+            ? Mathf.Infinity
+            : -Mathf.Infinity;
 
+        float rangeSqr = turretCard.towerData.range * turretCard.towerData.range;
+
+        foreach (Enemy e in enemies)
+        {
+            if (e == null) continue;
+
+            float distanceSqr = (e.transform.position - transform.position).sqrMagnitude;
+            if (distanceSqr > rangeSqr) continue;
+
+            float value = targetingMode switch
+            {
+                TargetingMode.Closest => distanceSqr,
+                TargetingMode.HighestHP => e.Health,
+                TargetingMode.TargetFirst => e.GetPathProgress(),
+                TargetingMode.TargetLast => e.GetPathProgress(),
+                _ => 0f
+            };
+
+            bool isBetter = targetingMode switch
+            {
+                TargetingMode.Closest => value < bestValue,
+                TargetingMode.TargetLast => value < bestValue,
+                TargetingMode.HighestHP => value > bestValue,
+                TargetingMode.TargetFirst => value > bestValue,
+                _ => false
+            };
+
+            if (isBetter)
+            {
+                bestValue = value;
+                chosen = e;
+            }
+        }
+
+        target = chosen != null ? chosen.transform : null;
     }
 
-    void LockOnTarget() {
+    void LockOnTarget()
+    {
+        if (target == null || partToRotate == null) return;
+
         Vector3 dir = target.position - partToRotate.position;
-        Quaternion lookRotation = Quaternion.LookRotation(dir);
-        lookRotation *= Quaternion.Euler(0f, yRotationOffset, 0f);
-        Vector3 rotation = Quaternion.Lerp(partToRotate.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;
+        if (dir == Vector3.zero) return;
+
+        Quaternion lookRotation = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, yRotationOffset, 0f);
+        Vector3 rotation = Quaternion.Lerp(partToRotate.rotation, lookRotation, Time.deltaTime * turretCard.towerData.turnSpeed).eulerAngles;
         partToRotate.rotation = Quaternion.Euler(0f, rotation.y, 0f);
     }
 
-    void Shoot() {
-        GameObject bulletGO = (GameObject)Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        Bullet bullet = bulletGO.GetComponent<Bullet>();
+    void Shoot()
+    {
+        if (turretCard.bulletPrefab == null) return;
 
-        if(bullet != null)
-            bullet.Seek(target);
+        GameObject bulletGO = Instantiate(turretCard.bulletPrefab, firePoint.position, firePoint.rotation);
+        Bullet bullet = bulletGO.GetComponent<Bullet>();
+        if (bullet != null)
+        {
+            bullet.SetStats(target, turretCard.towerData.baseDamage, turretCard.towerData.bulletSpeed, turretCard.towerData);
+
+            // Apply burning on projectile hit
+            bullet.onHitEnemy += (Enemy e) =>
+            {
+                TryApplyBurn(e);
+            };
+        }
+    }
+
+    void Laser()
+    {
+        if (!lineRenderer.enabled)
+        {
+            lineRenderer.enabled = true;
+            impactEffect.Play();
+        }
+
+        Quaternion laserRotation = Quaternion.Euler(0f, -90f, 0f) * firePoint.rotation;
+        Vector3 laserDirVisual = laserRotation * Vector3.forward;
+        float laserLengthVisual = turretCard?.towerData.laserLength ?? 10f;
+        float laserWidth = turretCard?.towerData.laserWidth ?? 0.5f;
+        Vector3 laserEnd = firePoint.position + laserDirVisual * laserLengthVisual;
+
+        lineRenderer.SetPosition(0, firePoint.position);
+        lineRenderer.SetPosition(1, laserEnd);
+        impactEffect.transform.position = laserEnd;
+
+        // DAMAGE LASER
+        float laserDamagePerSecond = turretCard.towerData.baseDamage;
+
+        Vector3 boxCenter = firePoint.position + laserDirVisual * (laserLengthVisual / 2f);
+        Vector3 boxHalfExtents = new Vector3(laserWidth / 2f, laserWidth / 2f, laserLengthVisual / 2f);
+        Quaternion boxRotation = Quaternion.LookRotation(laserDirVisual);
+
+        Collider[] hits = Physics.OverlapBox(boxCenter, boxHalfExtents, boxRotation);
+        foreach (Collider hit in hits)
+        {
+            if (hit.CompareTag("Enemy"))
+            {
+                Enemy e = hit.GetComponent<Enemy>();
+                if (e != null)
+                {
+                    e.TakeDamage(Mathf.FloorToInt(laserDamagePerSecond * Time.deltaTime));
+                    TryApplyBurn(e);
+                }
+            }
+        }
+    }
+
+    void TryApplyBurn(Enemy e)
+    {
+        if (turretCard.towerData.burnChance <= 0f) return;
+
+        if (Random.value <= turretCard.towerData.burnChance)
+        {
+            e.ApplyBurn(turretCard.towerData.burnDamage); // Only pass damage
+        }
+    }
+
+    void DisableLaser()
+    {
+        if (turretCard.towerData.useLaser && lineRenderer.enabled)
+        {
+            lineRenderer.enabled = false;
+            impactEffect.Stop();
+        }
     }
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red; 
-        Gizmos.DrawWireSphere(transform.position, range);
+        if (turretCard != null && turretCard.towerData != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, turretCard.towerData.range);
+        }
     }
 }
