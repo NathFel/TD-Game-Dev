@@ -38,5 +38,5 @@ MonoBehaviour:
   spellPrefab: {fileID: 950649848767671616, guid: 5ab4f4f0796e54f4a811e84906e3bc91, type: 3}
   spellPower: 100
   spellDuration: 2
-  spellRadius: 2
+  spellRadius: 5
   spellSpeed: 1

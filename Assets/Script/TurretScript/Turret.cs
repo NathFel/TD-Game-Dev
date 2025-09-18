@@ -4,7 +4,6 @@ using UnityEngine;
 public class Turret : MonoBehaviour
 {
     private Transform target;
-    private float laserDamageAccum = 0f;
 
     [Header("References")]
     public Transform partToRotate;
@@ -20,6 +19,11 @@ public class Turret : MonoBehaviour
     public Card turretCard;
     private float fireCountdown = 0f;
 
+    [Header("Selection Settings")]
+    public GameObject rangeSpherePrefab; // Assign a transparent sphere prefab
+    private GameObject rangeSphereInstance;
+    private bool isSelected = false;
+
     public enum TargetingMode
     {
         TargetFirst,
@@ -30,6 +34,8 @@ public class Turret : MonoBehaviour
 
     void Update()
     {
+        HandleSelectionVisual();
+
         if (turretCard == null || turretCard.towerData == null) return;
 
         // Acquire target if null, dead, or out of range
@@ -59,6 +65,42 @@ public class Turret : MonoBehaviour
                 Shoot();
                 fireCountdown = 1f / Mathf.Max(turretCard.towerData.fireRate, 0.01f);
             }
+        }
+    }
+
+    private void HandleSelectionVisual()
+    {
+        if (isSelected)
+        {
+            if (rangeSphereInstance == null && rangeSpherePrefab != null)
+            {
+                // Offset Y by 5 units
+                Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
+                rangeSphereInstance = Instantiate(rangeSpherePrefab, spawnPos, Quaternion.identity);
+
+                float diameter = turretCard.towerData.range * 2f;
+                rangeSphereInstance.transform.localScale = new Vector3(diameter, 0.1f, diameter);
+            }
+        }
+        else
+        {
+            if (rangeSphereInstance != null)
+            {
+                Destroy(rangeSphereInstance);
+            }
+        }
+
+        
+    }
+
+    public void Select() => isSelected = true;
+    public void Deselect() => isSelected = false;
+
+    private void OnDestroy()
+    {
+        if (rangeSphereInstance != null)
+        {
+            Destroy(rangeSphereInstance);
         }
     }
 
@@ -135,7 +177,6 @@ public class Turret : MonoBehaviour
         {
             bullet.SetStats(target, turretCard.towerData.baseDamage, turretCard.towerData.bulletSpeed, turretCard.towerData);
 
-            // Apply burning on projectile hit
             bullet.onHitEnemy += (Enemy e) =>
             {
                 TryApplyBurn(e);
@@ -161,7 +202,6 @@ public class Turret : MonoBehaviour
         lineRenderer.SetPosition(1, laserEnd);
         impactEffect.transform.position = laserEnd;
 
-        // DAMAGE LASER
         float laserDamagePerSecond = turretCard.towerData.baseDamage;
 
         Vector3 boxCenter = firePoint.position + laserDirVisual * (laserLengthVisual / 2f);
@@ -189,7 +229,7 @@ public class Turret : MonoBehaviour
 
         if (Random.value <= turretCard.towerData.burnChance)
         {
-            e.ApplyBurn(turretCard.towerData.burnDamage); // Only pass damage
+            e.ApplyBurn(turretCard.towerData.burnDamage);
         }
     }
 
@@ -199,15 +239,6 @@ public class Turret : MonoBehaviour
         {
             lineRenderer.enabled = false;
             impactEffect.Stop();
-        }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (turretCard != null && turretCard.towerData != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, turretCard.towerData.range);
         }
     }
 }

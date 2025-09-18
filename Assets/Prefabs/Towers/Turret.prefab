@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4500770462832111383}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PartToRotate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1403174044812853377}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.31300002, z: 0}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -43,7 +43,8 @@ GameObject:
   m_Component:
   - component: {fileID: 443606474228737830}
   - component: {fileID: 9076475409032389398}
-  m_Layer: 0
+  - component: {fileID: 1995448252234227015}
+  m_Layer: 6
   m_Name: Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -59,7 +60,7 @@ Transform:
   m_GameObject: {fileID: 2735528682194251564}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9, y: 0.5, z: 13.28}
+  m_LocalPosition: {x: 9, y: 0, z: 13.28}
   m_LocalScale: {x: 2.500001, y: 2.5, z: 2.500001}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -86,6 +87,28 @@ MonoBehaviour:
   targetingMode: 0
   yRotationOffset: 90
   turretCard: {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
+  rangeSpherePrefab: {fileID: 9057766349655395459, guid: ecc06ce0db9af4744b260bcf86809744, type: 3}
+--- !u!65 &1995448252234227015
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2735528682194251564}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.70258516, y: 0.71748036, z: 0.7623175}
+  m_Center: {x: 0.031622767, y: 0.31101117, z: 0.11884156}
 --- !u!1 &4288752201783920192
 GameObject:
   m_ObjectHideFlags: 0
@@ -97,7 +120,7 @@ GameObject:
   - component: {fileID: 3452972957983110401}
   - component: {fileID: 5561204023807783227}
   - component: {fileID: 3382829466701194584}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Turret.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -113,7 +136,7 @@ Transform:
   m_GameObject: {fileID: 4288752201783920192}
   serializedVersion: 2
   m_LocalRotation: {x: 0.00000014901161, y: 0.000000059604645, z: -0.7071068, w: -0.7071068}
-  m_LocalPosition: {x: 0, y: 0.47646427, z: 0.613109}
+  m_LocalPosition: {x: 0, y: 0.651, z: 0.613109}
   m_LocalScale: {x: 0.04413966, y: 0.04413967, z: 0.044139672}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -179,7 +202,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1225402617263615597}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: FirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -212,7 +235,7 @@ GameObject:
   - component: {fileID: 5567825909848151943}
   - component: {fileID: 1570207169613907728}
   - component: {fileID: 1338705561254903655}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}

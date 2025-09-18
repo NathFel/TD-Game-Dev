@@ -14,6 +14,10 @@ public class DeckManager : MonoBehaviour
     public int maxHandSize = 10;
     public int startingHandCount = 5;
     public int handDrawPerRound = 2;
+    public float cardSpacing = 200f;
+    public float curveHeight = 100f;
+    public float curveStrength = 1f;
+    public float cardAngle = 10f;
 
     [Header("Deck Settings")]
     public int maxDeckSize = 20;
@@ -37,14 +41,24 @@ public class DeckManager : MonoBehaviour
     private int currentRound = 1;
     private int currentWave = 1;
     private GamePhase currentPhase;
-
     private bool firstDrawThisRound = true;
+    private int selectedCardIndex = -1;
+    [HideInInspector] public int hoveredIndex = -1;
 
     void Start()
     {
         currentDeck.AddRange(startingDeck);
         ShuffleDrawPile();
         StartPhase(GamePhase.DrawAndBuild);
+    }
+
+    void Update(){
+        UpdateHandLayout();
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            HandleRightClick();
+        }
     }
 
     private void StartPhase(GamePhase phase)
@@ -55,15 +69,12 @@ public class DeckManager : MonoBehaviour
         switch (phase)
         {
             case GamePhase.DrawAndBuild:
-                DiscardHand();   // 🔹 Always discard before drawing
+                DiscardHand();
                 DrawHand();
                 break;
             case GamePhase.Shop:
                 if (ShopManager.Instance != null)
                     ShopManager.Instance.OpenShop(OnShopClosed);
-                break;
-            case GamePhase.EnemyWave:
-                // Enemy waves triggered manually by button
                 break;
         }
     }
@@ -99,8 +110,7 @@ public class DeckManager : MonoBehaviour
         {
             if (drawPile.Count == 0)
             {
-                if (discardPile.Count == 0)
-                    break;
+                if (discardPile.Count == 0) break;
 
                 drawPile.AddRange(discardPile);
                 discardPile.Clear();
@@ -113,6 +123,11 @@ public class DeckManager : MonoBehaviour
             hand.Add(drawn);
 
             CardUI cu = Instantiate(cardUIPrefab, handPanel);
+            float xOffset = 1000f; // adjust as needed
+            Vector3 pos = cu.transform.localPosition; // get current position
+            pos.x += xOffset; // add offset
+            cu.transform.localPosition = pos; // apply new position
+
             cu.Setup(drawn, this);
         }
     }
@@ -127,6 +142,100 @@ public class DeckManager : MonoBehaviour
             Destroy(child.gameObject);
     }
 
+    public void SelectCard(int index)
+    {
+        if (selectedCardIndex == index)
+            selectedCardIndex = -1;
+        else
+            selectedCardIndex = index;
+
+        // Cancel any active placement when selecting a card
+        if (PlacementManager.Instance != null) PlacementManager.Instance.CancelPlacement();
+        if (SpellPlacementManager.Instance != null) SpellPlacementManager.Instance.CancelPlacement();
+    }
+
+    public void DeselectCard()
+    {
+        selectedCardIndex = -1;
+    }
+
+    public void HandleRightClick()
+    {
+        PlacementManager.Instance?.CancelPlacement();
+        SpellPlacementManager.Instance?.CancelPlacement();
+        DeselectCard();
+    }
+    
+    public void UpdateHandLayout(int draggingIndex = -1)
+    {
+        int cardCount = handPanel.childCount;
+        if (cardCount == 0) return;
+
+        float midIndex = (cardCount - 1) / 2f;
+
+        for (int i = 0; i < cardCount; i++)
+        {
+            RectTransform rect = handPanel.GetChild(i).GetComponent<RectTransform>();
+            if (rect == null) continue;
+
+            CardUI cu = rect.GetComponent<CardUI>();
+
+            // --- Use hierarchy index for hovered/selected ---
+            bool isHovered = (hoveredIndex == i);
+            bool isSelected = (selectedCardIndex == i);
+
+            // --- Base X position ---
+            float xPos = (i - midIndex) * cardSpacing;
+
+            // --- Arc using parabola ---
+            float distanceFromCenter = (i - midIndex);
+            float curveOffset = -curveStrength * Mathf.Pow(distanceFromCenter, 2) + curveHeight;
+
+            // --- Hover neighbors move away ---
+            if (hoveredIndex >= 0 && i != hoveredIndex)
+            {
+                float direction = i < hoveredIndex ? -1f : 1f;
+                xPos += direction * 30f;
+            }
+
+            if (isSelected) curveOffset += curveHeight * 0.6f;
+            else if (isHovered) curveOffset += curveHeight * 0.3f;
+
+            Vector3 targetPos = new Vector3(xPos, curveOffset, 0f);
+
+            // --- Scale ---
+            float targetScale = 1f;
+            if (cu != null)
+            {
+                if (isSelected) targetScale = cu.hoverScale * 1.2f;
+                else if (isHovered) targetScale = cu.hoverScale;
+                else targetScale = cu.normalScale;
+            }
+
+            float moveSpeed = 800f;
+            rect.localPosition = Vector3.MoveTowards(rect.localPosition, targetPos, moveSpeed * Time.deltaTime);
+            rect.localScale = Vector3.MoveTowards(rect.localScale, Vector3.one * targetScale, moveSpeed * Time.deltaTime);
+
+            // --- Rotation ---
+            float angle = (i - midIndex) * -cardAngle * curveStrength;
+            if (isHovered || isSelected) angle = 0;
+            rect.localRotation = Quaternion.RotateTowards(rect.localRotation, Quaternion.Euler(0, 0, angle), moveSpeed * 10f * Time.deltaTime);
+
+            // --- Canvas sorting ---
+            Canvas cardCanvas = rect.GetComponent<Canvas>();
+            if (cardCanvas != null)
+            {
+                cardCanvas.overrideSorting = true;
+                cardCanvas.sortingOrder = isSelected ? 100 : 0;
+            }
+
+            // --- Update CardUI handIndex dynamically ---
+            if (cu != null) cu.handIndex = i;
+        }
+    }
+
+
+    // === Play, discard, shop, etc. (same as before) ===
     public void RequestPlayCard(Card card, CardUI cardUI)
     {
         if (card == null || cardUI == null) return;
@@ -136,6 +245,7 @@ public class DeckManager : MonoBehaviour
             if (currentPhase != GamePhase.DrawAndBuild)
             {
                 Debug.Log("Towers can only be placed during the Build phase.");
+                DeselectCard();
                 return;
             }
 
@@ -156,6 +266,7 @@ public class DeckManager : MonoBehaviour
             if (currentPhase != GamePhase.EnemyWave)
             {
                 Debug.Log("Spells can only be used during Enemy Wave phase.");
+                DeselectCard();
                 return;
             }
 
@@ -190,6 +301,8 @@ public class DeckManager : MonoBehaviour
 
         isPlacing = false;
         placingCardUI = null;
+
+        DeselectCard();
     }
 
     private void OnPlacementCanceled()

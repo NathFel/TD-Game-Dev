@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class SpellPlacementManager : MonoBehaviour
 {
@@ -10,6 +11,14 @@ public class SpellPlacementManager : MonoBehaviour
     private Action onPlaced;
     private Action onCanceled;
     private Camera mainCamera;
+
+    private GameObject spellPreview;
+    public GameObject spellPreviewPrefab;
+
+    [Header("Preview Settings")]
+    public LayerMask groundLayer; // assign your ground layer in inspector
+    public float previewY = 0.5f; // height of preview above ground
+    public float previewLerpSpeed = 20f; // smooth movement speed
 
     private void Awake()
     {
@@ -23,20 +32,23 @@ public class SpellPlacementManager : MonoBehaviour
     {
         if (!isPlacing || spellCard == null) return;
 
-        if (Input.GetMouseButtonDown(0)) // Left click to place
+        UpdateSpellPreview();
+
+        // Place spell on left-click, ignore clicks over UI
+        if (Input.GetMouseButtonDown(0))
         {
-            if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+            if (IsPointerOverUI()) return;
+
+            if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, groundLayer))
             {
                 PlaceSpell(hit.point);
             }
         }
-
-        if (Input.GetMouseButtonDown(1)) // Right click to cancel
-        {
-            CancelPlacement();
-        }
     }
 
+    /// <summary>
+    /// Starts the spell placement process.
+    /// </summary>
     public void StartPlacingSpell(Card card, Action onPlaced = null, Action onCanceled = null)
     {
         if (card == null || card.spellPrefab == null)
@@ -56,6 +68,8 @@ public class SpellPlacementManager : MonoBehaviour
         this.onPlaced = onPlaced;
         this.onCanceled = onCanceled;
 
+        CreateSpellPreview();
+
         Debug.Log("Started placing spell: " + card.cardName);
     }
 
@@ -63,6 +77,7 @@ public class SpellPlacementManager : MonoBehaviour
     {
         if (spellCard == null) return;
 
+        // Instantiate spell prefab
         GameObject spellObj = Instantiate(spellCard.spellPrefab, position, Quaternion.identity);
         Spell spell = spellObj.GetComponent<Spell>();
         if (spell != null)
@@ -72,6 +87,7 @@ public class SpellPlacementManager : MonoBehaviour
             spell.Duration = spellCard.spellDuration;
         }
 
+        DestroyPreview();
         isPlacing = false;
         spellCard = null;
 
@@ -81,8 +97,12 @@ public class SpellPlacementManager : MonoBehaviour
         Debug.Log("Spell placed at " + position);
     }
 
-    private void CancelPlacement()
+    /// <summary>
+    /// Cancels the current placement.
+    /// </summary>
+    public void CancelPlacement()
     {
+        DestroyPreview();
         isPlacing = false;
         spellCard = null;
 
@@ -98,5 +118,43 @@ public class SpellPlacementManager : MonoBehaviour
         onCanceled = null;
     }
 
-    public bool IsPlacingSpell() => isPlacing;
+    // --- Preview Methods ---
+    private void CreateSpellPreview()
+    {
+        if (spellPreviewPrefab != null)
+        {
+            spellPreview = Instantiate(spellPreviewPrefab);
+            float diameter = spellCard.spellRadius * 2f;
+            spellPreview.transform.localScale = new Vector3(diameter, 0.1f, diameter);
+        }
+    }
+
+    private void UpdateSpellPreview()
+    {
+        if (spellPreview == null) return;
+
+        // Only move preview on ground
+        if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, groundLayer))
+        {
+            Vector3 targetPos = new Vector3(hit.point.x, previewY, hit.point.z);
+            spellPreview.transform.position = Vector3.Lerp(spellPreview.transform.position, targetPos, Time.deltaTime * previewLerpSpeed);
+        }
+    }
+
+    private void DestroyPreview()
+    {
+        if (spellPreview != null)
+        {
+            Destroy(spellPreview);
+            spellPreview = null;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the mouse is currently over any UI element.
+    /// </summary>
+    private bool IsPointerOverUI()
+    {
+        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+    }
 }

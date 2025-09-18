@@ -10,7 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4756061312715780496}
   - component: {fileID: 5051652260181512977}
-  m_Layer: 0
+  - component: {fileID: 4312661844836271622}
+  m_Layer: 6
   m_Name: Missile Launcher
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53,6 +54,28 @@ MonoBehaviour:
   targetingMode: 0
   yRotationOffset: 90
   turretCard: {fileID: 11400000, guid: 26c91c723afeb3346966c83e717735b3, type: 2}
+  rangeSpherePrefab: {fileID: 9057766349655395459, guid: ecc06ce0db9af4744b260bcf86809744, type: 3}
+--- !u!65 &4312661844836271622
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 43144752293622142}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.598468, y: 4.916509, z: 4.5545177}
+  m_Center: {x: 0.122032166, y: 1.9582546, z: -0.17030561}
 --- !u!1 &555322808558210932
 GameObject:
   m_ObjectHideFlags: 0
@@ -64,7 +87,7 @@ GameObject:
   - component: {fileID: 109385532231172735}
   - component: {fileID: 4654897411487907968}
   - component: {fileID: 5787903260663989270}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -148,7 +171,7 @@ GameObject:
   - component: {fileID: 7568440038434520781}
   - component: {fileID: 4505970449595535508}
   - component: {fileID: 4443349622041308766}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Stand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -230,7 +253,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5968533007441563637}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: FirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -261,7 +284,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 366634452565480670}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PartToRotate
   m_TagString: Untagged
   m_Icon: {fileID: 0}

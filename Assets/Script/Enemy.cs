@@ -25,7 +25,6 @@ public class Enemy : MonoBehaviour
     private float burnInterval = 1f;   // Enemy-defined
     private float burnDuration = 5f;   // Enemy-defined
     private float burnTimeElapsed = 0f;
-    private int queuedBurnDamage = 0;
     private GameObject activeBurnEffect;
     private Coroutine burnCoroutine;
 

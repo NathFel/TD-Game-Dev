@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using UnityEngine.EventSystems;
 
-public class CardUI : MonoBehaviour
+public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Image artworkImage;
@@ -12,13 +13,56 @@ public class CardUI : MonoBehaviour
     private Button button; // root button
     private DeckManager deckManager;
 
-    // Expose card to DeckManager
     public Card CardData { get; private set; }
+
+    // --- Animation settings ---
+    private Vector3 targetPos;
+    [HideInInspector]public float hoverScale = 1.05f;
+    [HideInInspector]public float normalScale = 1f;
+    [HideInInspector] public int handIndex;
+    private Canvas canvas;
+    private RectTransform rectTransform;
 
     private void Awake()
     {
-        // Get the Button component on the prefab root
         button = GetComponent<Button>();
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
+    }
+
+    public void SetTargetLocalPosition(Vector3 pos)
+    {
+        targetPos = pos;
+    }
+
+    public void SetInteractable(bool value)
+    {
+        if (button != null) button.interactable = value;
+    }
+
+    // ===== Hover pop-up =====
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        deckManager.hoveredIndex = handIndex; // handIndex updated dynamically
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        deckManager.hoveredIndex = -1;
+    }
+
+    // Click selects card
+    private void OnCardClicked()
+    {
+        if (deckManager == null) return;
+
+        // Cancel any active placement (tower or spell)
+        PlacementManager.Instance?.CancelPlacement();
+        SpellPlacementManager.Instance?.CancelPlacement();
+
+        // Select this card
+        int index = transform.GetSiblingIndex();
+        deckManager.SelectCard(index);
     }
 
     public void Setup(Card card, DeckManager manager)
@@ -35,17 +79,14 @@ public class CardUI : MonoBehaviour
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
+                OnCardClicked();
                 deckManager.RequestPlayCard(CardData, this);
             });
         }
     }
 
-    public void SetInteractable(bool value)
-    {
-        if (button != null) button.interactable = value;
-    }
-
-    private Button buyButton; 
+    // ===== Shop buy support =====
+    private Button buyButton;
     public void EnableBuyButton(Action onBuy)
     {
         if (buyButton != null)
@@ -55,7 +96,7 @@ public class CardUI : MonoBehaviour
             buyButton.onClick.AddListener(() => onBuy?.Invoke());
         }
 
-        // Disable root button to prevent playing in-hand
+        // Disable root button to prevent in-hand play
         if (button != null)
             button.interactable = false;
     }
