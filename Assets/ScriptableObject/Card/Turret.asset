@@ -22,7 +22,7 @@ MonoBehaviour:
     range: 15
     fireRate: 1
     turnSpeed: 50
-    baseDamage: 0
+    baseDamage: 10
     useLaser: 0
     laserLength: 20
     laserWidth: 1
@@ -31,8 +31,8 @@ MonoBehaviour:
     bounce: 0
     AoERadius: 0
     bulletSpeed: 100
-    burnChance: 1
-    burnDamage: 10
+    burnChance: 0
+    burnDamage: 0
   cost: 50
   upgradeLevel: 0
   spellPrefab: {fileID: 0}

@@ -63,6 +63,19 @@ public class DeckManager : MonoBehaviour
 
     private void StartPhase(GamePhase phase)
     {
+        if (isPlacing)
+        {
+            isPlacing = false;
+            placingCardUI?.SetInteractable(true);
+            placingCardUI = null;
+
+            // Also cancel managers to clean up any ghost placement
+            PlacementManager.Instance?.CancelPlacement();
+            SpellPlacementManager.Instance?.CancelPlacement();
+        }
+        
+        DeselectCard();
+
         currentPhase = phase;
         Debug.Log($"Starting Phase: {phase} | Round: {currentRound} | Wave: {currentWave}");
 
@@ -342,6 +355,7 @@ public class DeckManager : MonoBehaviour
         // Cleanup hand + board
         DiscardHand();
         ClearBoard();
+        TurretInfoUI.Instance?.Hide();
 
         currentWave++;
 

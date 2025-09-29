@@ -38,13 +38,8 @@ public class Turret : MonoBehaviour
 
         if (turretCard == null || turretCard.towerData == null) return;
 
-        // Acquire target if null, dead, or out of range
-        if (target == null || !EnemyWaveManager.Instance.activeEnemies.Contains(target.GetComponent<Enemy>()) ||
-            Vector3.Distance(transform.position, target.position) > turretCard.towerData.range)
-        {
-            UpdateTarget();
-        }
-
+        UpdateTarget();
+        
         if (target == null)
         {
             DisableLaser();
@@ -93,8 +88,17 @@ public class Turret : MonoBehaviour
         
     }
 
-    public void Select() => isSelected = true;
-    public void Deselect() => isSelected = false;
+    public void Select()
+    {
+        isSelected = true;
+        TurretInfoUI.Instance?.ShowTurretInfo(this);
+    }
+
+    public void Deselect()
+    {
+        isSelected = false;
+        TurretInfoUI.Instance?.Hide();
+    }
 
     private void OnDestroy()
     {
