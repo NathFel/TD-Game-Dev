@@ -23,14 +23,15 @@ public class DeckManager : MonoBehaviour
     public int maxDeckSize = 20;
     public List<Card> startingDeck = new List<Card>();
 
-    [HideInInspector] public List<Card> currentDeck = new List<Card>();
-    [HideInInspector] public List<Card> drawPile = new List<Card>();
-    [HideInInspector] public List<Card> hand = new List<Card>();
-    [HideInInspector] public List<Card> discardPile = new List<Card>();
+     public List<Card> currentDeck = new List<Card>();
+     public List<Card> drawPile = new List<Card>();
+     public List<Card> hand = new List<Card>();
+     public List<Card> discardPile = new List<Card>();
 
     [Header("UI")]
     public Transform handPanel;
     public CardUI cardUIPrefab;
+    public float shopSpawnChance = 0.5f;
 
     [Header("Wave Settings")]
     public int maxWave = 5;
@@ -38,12 +39,24 @@ public class DeckManager : MonoBehaviour
     private bool isPlacing = false;
     private CardUI placingCardUI = null;
 
-    private int currentRound = 1;
-    private int currentWave = 1;
+    [HideInInspector]public int currentRound = 1;
+    [HideInInspector]public int currentWave = 1;
     private GamePhase currentPhase;
     private bool firstDrawThisRound = true;
     private int selectedCardIndex = -1;
     [HideInInspector] public int hoveredIndex = -1;
+
+    public static DeckManager Instance;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
     void Start()
     {
@@ -75,7 +88,7 @@ public class DeckManager : MonoBehaviour
         }
         
         DeselectCard();
-
+        
         currentPhase = phase;
         Debug.Log($"Starting Phase: {phase} | Round: {currentRound} | Wave: {currentWave}");
 
@@ -345,8 +358,14 @@ public class DeckManager : MonoBehaviour
         if (currentPhase == GamePhase.DrawAndBuild)
         {
             StartPhase(GamePhase.EnemyWave);
+
             if (EnemyWaveManager.Instance != null)
-                EnemyWaveManager.Instance.StartWave(currentRound, currentWave, OnWaveComplete);
+            {
+                bool isElitePhase = (currentRound % 5 == 0 && currentRound % 10 != 0 && currentWave == maxWave);
+                bool isBossPhase = (currentRound % 10 == 0 && currentWave == maxWave);
+
+                EnemyWaveManager.Instance.StartWave(currentRound, currentWave, isElitePhase, isBossPhase, OnWaveComplete);
+            }
         }
     }
 
@@ -363,15 +382,40 @@ public class DeckManager : MonoBehaviour
         {
             currentRound++;
             firstDrawThisRound = true;
-
             CollectAllCardsToDeck();
-            StartPhase(GamePhase.Shop);
+            
+            int roundReward = currentRound * 200; 
+            ShowReward(roundReward, afterReward: () =>
+            {
+                currentWave = 1;
 
-            currentWave = 1; // reset for next round
+                // --- Determine if shop should appear ---
+                if (Random.value <= shopSpawnChance && ShopManager.Instance != null)
+                {
+                    StartPhase(GamePhase.Shop);
+                }
+                else
+                {
+                    // If no shop, go straight to DrawAndBuild phase
+                    StartPhase(GamePhase.DrawAndBuild);
+                }
+            });
+        }
+        else 
+        {
+            StartPhase(GamePhase.DrawAndBuild);
+        } 
+    }
+
+    private void ShowReward(int waveMoney, System.Action afterReward)
+    {
+        if (RewardUIManager.Instance != null)
+        {
+            RewardUIManager.Instance.ShowReward(waveMoney, afterReward);
         }
         else
         {
-            StartPhase(GamePhase.DrawAndBuild);
+            afterReward?.Invoke();
         }
     }
 

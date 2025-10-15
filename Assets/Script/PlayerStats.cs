@@ -14,15 +14,21 @@ public class PlayerStats : MonoBehaviour
     void Start ()
     {
         Money = startMoney;
-        StartCoroutine(PassiveIncome()); 
         Hp = startHp;
     }
 
-    IEnumerator PassiveIncome() {
-        while (true) 
+    void Update ()
+    {
+        if (Hp <= 0)
         {
-            yield return new WaitForSeconds(1f);
-            Money += passiveIncome;
+            if (GameOverUI.Instance == null) return;
+
+            int round = DeckManager.Instance != null ? DeckManager.Instance.currentRound : 1;
+            int wave = DeckManager.Instance != null ? DeckManager.Instance.currentWave : 1;
+
+            bool playerWon = round > 10;
+
+            GameOverUI.Instance.ShowGameOver(round, wave, playerWon);
         }
     }
 }

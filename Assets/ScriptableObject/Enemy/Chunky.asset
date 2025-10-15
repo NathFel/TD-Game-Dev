@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Chunky
   m_EditorClassIdentifier: 
   enemyName: Chunky
-  prefab: {fileID: 1920073500180890859, guid: 26a1dc0ab9e32ee47866f93277431e75, type: 3}
+  prefab: {fileID: 1920073500180890859, guid: 681084b37e6a16c419dbd6270200e160, type: 3}
   healthMultiplier: 1.5
   speedMultiplier: 1
   moneyMultiplier: 1

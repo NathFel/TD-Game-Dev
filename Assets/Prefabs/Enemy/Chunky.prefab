@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 5049150978616951419}
   - component: {fileID: 8950966711529023466}
   - component: {fileID: 1354912699567571347}
+  - component: {fileID: 4249640645505178356}
   m_Layer: 0
-  m_Name: Enemy 1
+  m_Name: Chunky
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -119,10 +120,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1e48d776100169498d8ae03b50c2a6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: {fileID: 11400000, guid: 6ee8e0c73795a934db2090e5c0bb8e62, type: 2}
   speed: 10
-  health: 100
+  baseHealth: 100
   moneyDrop: 50
+  wavepointIndex: 0
+  segmentProgress: 0
   deathEffect: {fileID: 8360400350464209689, guid: 855337cc9cf1a054091fddb36dbbe998, type: 3}
+  burnEffectPrefab: {fileID: 4530448835926720786, guid: 551602df5a73d2847879f9dd4b7b4c35, type: 3}
+--- !u!114 &4249640645505178356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1920073500180890859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a35b7652cf9d50a43ab577ce2e3178b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthBarPrefab: {fileID: 2353490939804179826, guid: 5d3f0b798c437f54fb2564f19687b600, type: 3}
+  healthBarOffset: {x: 0, y: 2, z: 0}
+  fixedHealthBarScale: 1
+  hpTextPrefab: {fileID: 6449264485050426476, guid: e33d81622695ed748adbab4d89e197d3, type: 3}
+  hpTextOffset: {x: 0, y: 0.3, z: 0}
 --- !u!1 &2847915059861605049
 GameObject:
   m_ObjectHideFlags: 0

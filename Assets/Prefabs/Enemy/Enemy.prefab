@@ -120,7 +120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1e48d776100169498d8ae03b50c2a6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyType: {fileID: 0}
+  enemyType: {fileID: 11400000, guid: 7c996d5bbedad194d957e2e0f790a2bc, type: 2}
   speed: 10
   baseHealth: 100
   moneyDrop: 50

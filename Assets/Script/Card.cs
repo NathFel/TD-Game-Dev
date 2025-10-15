@@ -8,6 +8,7 @@ public class Card : ScriptableObject
     public Sprite artwork;
     [TextArea] public string description;
     public CardType cardType;
+    public CardUI.Rarity rarity = CardUI.Rarity.Common;
 
     [Header("Tower Data")]
     public GameObject towerPrefab;  

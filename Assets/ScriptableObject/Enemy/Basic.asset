@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Basic
   m_EditorClassIdentifier: 
   enemyName: Basic
-  prefab: {fileID: 1920073500180890859, guid: a17b8f3e336808540934f372a248012e, type: 3}
+  prefab: {fileID: 1920073500180890859, guid: cd5b2384f996bb94c96bb0b602b9640c, type: 3}
   healthMultiplier: 1
   speedMultiplier: 1
   moneyMultiplier: 1

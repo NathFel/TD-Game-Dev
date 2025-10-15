@@ -10,6 +10,8 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] private Image artworkImage;
     [SerializeField] private TMP_Text descriptionText;
 
+    [SerializeField] private Image rarityBackground; // New field for rarity background
+
     private Button button; // root button
     private DeckManager deckManager;
 
@@ -17,11 +19,14 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     // --- Animation settings ---
     private Vector3 targetPos;
-    [HideInInspector]public float hoverScale = 1.05f;
-    [HideInInspector]public float normalScale = 1f;
+    [HideInInspector] public float hoverScale = 1.05f;
+    [HideInInspector] public float normalScale = 1f;
     [HideInInspector] public int handIndex;
     private Canvas canvas;
     private RectTransform rectTransform;
+
+    // --- Rarity Enum ---
+    public enum Rarity { Common, Rare, Epic, Legendary }
 
     private void Awake()
     {
@@ -74,6 +79,12 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         if (artworkImage != null) artworkImage.sprite = card.artwork;
         if (descriptionText != null) descriptionText.text = card.description;
 
+        // Set rarity
+        if (rarityBackground != null)
+        {
+            SetRarity(card.rarity);
+        }
+
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
@@ -84,6 +95,32 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             });
         }
     }
+
+    // ===== Rarity System =====
+    public void SetRarity(Rarity rarity)
+{
+    string hexColor = "#808080"; // Default: Common (gray)
+    switch (rarity)
+    {
+        case Rarity.Common:
+            hexColor = "#808080"; // Gray
+            break;
+        case Rarity.Rare:
+            hexColor = "#0e56dbff"; // Blue
+            break;
+        case Rarity.Epic:
+            hexColor = "#9B59B6"; // Magenta/Purple
+            break;
+        case Rarity.Legendary:
+            hexColor = "#F1C40F"; // Yellow/Gold
+            break;
+    }
+    Color color;
+    if (ColorUtility.TryParseHtmlString(hexColor, out color))
+    {
+        rarityBackground.color = color;
+    }
+}
 
     // ===== Shop buy support =====
     private Button buyButton;
