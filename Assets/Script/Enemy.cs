@@ -10,7 +10,7 @@ public class Enemy : MonoBehaviour
     [Header("Stats")]
     [SerializeField] private float speed = 10f;
     [SerializeField] private int baseHealth = 100;
-    [SerializeField] private int moneyDrop = 50;
+    [SerializeField] private int moneyDrop = 10;
 
     [HideInInspector] public int wavepointIndex = 0;
     [HideInInspector] public float segmentProgress = 0f;
@@ -177,10 +177,15 @@ public class Enemy : MonoBehaviour
         }
 
         StopBurn();
+
+        PlayerStats.Money += moneyDrop;
+
         EnemyWaveManager.Instance.EnemyDied(this);
         EnemyWaveManager.Instance.UnregisterEnemy(this);
+
         Destroy(gameObject);
     }
+
 
     void EndPath()
     {

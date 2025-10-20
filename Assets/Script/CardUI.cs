@@ -6,18 +6,18 @@ using UnityEngine.EventSystems;
 
 public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    [Header("Card UI")]
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private Image artworkImage;
     [SerializeField] private TMP_Text descriptionText;
+    [SerializeField] private Image rarityBackground;
 
-    [SerializeField] private Image rarityBackground; // New field for rarity background
-
-    private Button button; // root button
+    private Button button;
     private DeckManager deckManager;
 
     public Card CardData { get; private set; }
 
-    // --- Animation settings ---
+    // --- Animation & Layout ---
     private Vector3 targetPos;
     [HideInInspector] public float hoverScale = 1.05f;
     [HideInInspector] public float normalScale = 1f;
@@ -28,11 +28,30 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     // --- Rarity Enum ---
     public enum Rarity { Common, Rare, Epic, Legendary }
 
+    // --- Display Modes ---
+    public enum CardDisplayMode
+    {
+        Hand,
+        DeckView,
+        DiscardView,
+        Shop
+    }
+
+    [HideInInspector] public CardDisplayMode currentMode = CardDisplayMode.Hand;
+
+    // --- Buy Button (for shop mode) ---
+    private Button buyButton;
+
     private void Awake()
     {
         button = GetComponent<Button>();
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
+
+        // Try to find a buy button in children (optional)
+        Transform buyButtonTransform = transform.Find("BuyButton");
+        if (buyButtonTransform != null)
+            buyButton = buyButtonTransform.GetComponent<Button>();
     }
 
     public void SetTargetLocalPosition(Vector3 pos)
@@ -42,34 +61,24 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     public void SetInteractable(bool value)
     {
-        if (button != null) button.interactable = value;
+        if (button != null)
+            button.interactable = value;
     }
 
-    // ===== Hover pop-up =====
+    // ===== Hover Handling =====
     public void OnPointerEnter(PointerEventData eventData)
     {
-        deckManager.hoveredIndex = handIndex; // handIndex updated dynamically
+        if (currentMode == CardDisplayMode.Hand && deckManager != null)
+            deckManager.hoveredIndex = handIndex;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        deckManager.hoveredIndex = -1;
+        if (currentMode == CardDisplayMode.Hand && deckManager != null)
+            deckManager.hoveredIndex = -1;
     }
 
-    // Click selects card
-    private void OnCardClicked()
-    {
-        if (deckManager == null) return;
-
-        // Cancel any active placement (tower or spell)
-        PlacementManager.Instance?.CancelPlacement();
-        SpellPlacementManager.Instance?.CancelPlacement();
-
-        // Select this card
-        int index = transform.GetSiblingIndex();
-        deckManager.SelectCard(index);
-    }
-
+    // ===== Setup Card =====
     public void Setup(Card card, DeckManager manager)
     {
         CardData = card;
@@ -79,62 +88,94 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         if (artworkImage != null) artworkImage.sprite = card.artwork;
         if (descriptionText != null) descriptionText.text = card.description;
 
-        // Set rarity
+        // Set rarity color
         if (rarityBackground != null)
-        {
             SetRarity(card.rarity);
-        }
 
+        // Default mode is hand
+        currentMode = CardDisplayMode.Hand;
+
+        // Setup click event (for hand cards only)
         if (button != null)
         {
             button.onClick.RemoveAllListeners();
+
             button.onClick.AddListener(() =>
             {
-                OnCardClicked();
-                deckManager.RequestPlayCard(CardData, this);
+                if (currentMode == CardDisplayMode.Hand)
+                {
+                    OnCardClicked();
+                    deckManager?.RequestPlayCard(CardData, this);
+                }
             });
         }
+
+        // Hide buy button by default
+        if (buyButton != null)
+            buyButton.gameObject.SetActive(false);
+    }
+
+    private void OnCardClicked()
+    {
+        if (deckManager == null) return;
+
+        // Cancel any placement
+        PlacementManager.Instance?.CancelPlacement();
+        SpellPlacementManager.Instance?.CancelPlacement();
+
+        int index = transform.GetSiblingIndex();
+        deckManager.SelectCard(index);
     }
 
     // ===== Rarity System =====
     public void SetRarity(Rarity rarity)
-{
-    string hexColor = "#808080"; // Default: Common (gray)
-    switch (rarity)
     {
-        case Rarity.Common:
-            hexColor = "#808080"; // Gray
-            break;
-        case Rarity.Rare:
-            hexColor = "#0e56dbff"; // Blue
-            break;
-        case Rarity.Epic:
-            hexColor = "#9B59B6"; // Magenta/Purple
-            break;
-        case Rarity.Legendary:
-            hexColor = "#F1C40F"; // Yellow/Gold
-            break;
-    }
-    Color color;
-    if (ColorUtility.TryParseHtmlString(hexColor, out color))
-    {
-        rarityBackground.color = color;
-    }
-}
+        string hexColor = "#808080"; // Default: Common (gray)
+        switch (rarity)
+        {
+            case Rarity.Common:
+                hexColor = "#808080"; // Gray
+                break;
+            case Rarity.Rare:
+                hexColor = "#0e56dbff"; // Blue
+                break;
+            case Rarity.Epic:
+                hexColor = "#9B59B6"; // Magenta/Purple
+                break;
+            case Rarity.Legendary:
+                hexColor = "#F1C40F"; // Gold
+                break;
+        }
 
-    // ===== Shop buy support =====
-    private Button buyButton;
-    public void EnableBuyButton(Action onBuy)
+        if (ColorUtility.TryParseHtmlString(hexColor, out Color color))
+            rarityBackground.color = color;
+    }
+
+    // ===== Shop / Buy Mode =====
+    public void EnableBuyMode(Action onBuy)
     {
+        currentMode = CardDisplayMode.Shop;
+
+        // Disable main button (hand click)
+        SetInteractable(false);
+
+        // Enable buy button
         if (buyButton != null)
         {
             buyButton.gameObject.SetActive(true);
             buyButton.onClick.RemoveAllListeners();
             buyButton.onClick.AddListener(() => onBuy?.Invoke());
         }
+    }
 
-        // Disable root button to prevent in-hand play
-        if (button != null)
-            button.interactable = false;
+    // ===== Deck Display Support =====
+    public void SetDisplayMode(CardDisplayMode mode)
+    {
+        currentMode = mode;
+        SetInteractable(mode == CardDisplayMode.Hand);
+
+        // Hide buy button unless in shop
+        if (buyButton != null)
+            buyButton.gameObject.SetActive(mode == CardDisplayMode.Shop);
     }
 }

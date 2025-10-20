@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class PlayerStats : MonoBehaviour
 {
+
     public static int Money;
     public int startMoney = 400;
-    public int passiveIncome = 10;
 
     public static int Hp;
     public int startHp = 20;
@@ -30,5 +30,10 @@ public class PlayerStats : MonoBehaviour
 
             GameOverUI.Instance.ShowGameOver(round, wave, playerWon);
         }
+    }
+
+    public void AddMoney(int amount)
+    {
+        Money += amount;
     }
 }

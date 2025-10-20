@@ -508,6 +508,10 @@ MonoBehaviour:
   nameText: {fileID: 6228214159086269526}
   artworkImage: {fileID: 7467647253860649729}
   descriptionText: {fileID: 3792196980613957433}
+  rarityBackground: {fileID: 1549267321375836982}
+  hoverScale: 1.05
+  normalScale: 1
+  handIndex: 0
 --- !u!223 &291916641729899833
 Canvas:
   m_ObjectHideFlags: 0

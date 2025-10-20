@@ -10,17 +10,26 @@ public class ShopManager : MonoBehaviour
 
     [Header("UI")]
     public GameObject shopPanel;
-    public TextMeshProUGUI moneyText; 
-    public Transform shopContent; // container for cards
+    public TextMeshProUGUI moneyText;
+    public Transform shopContent;
     public int cardsToShow = 4;
-    public float costDistanceFromCard = 20f; // adjustable distance
-    public Button exitShopButton; // assign in Inspector
+    public float costDistanceFromCard = 20f;
+    public Button exitShopButton;
 
     [Header("Shop Settings")]
     public List<Card> availableCards = new List<Card>();
 
+    [Header("Destroy Card UI")]
+    public Button destroyCardButton;
+    public GameObject destroyPanel;
+    public Transform destroyContent;
+    public Button confirmDestroyButton;
+    public TextMeshProUGUI destroyCostText;
+    public int destroyCardCost = 30;
+
     private Action onShopClosed;
     private DeckManager deckManager;
+    private Card selectedDestroyCard = null;
 
     private void Awake()
     {
@@ -35,15 +44,22 @@ public class ShopManager : MonoBehaviour
         if (deckManager == null)
             Debug.LogError("No DeckManager found in scene!");
 
-        // Assign exit button listener
+        // Assign listeners
         if (exitShopButton != null)
             exitShopButton.onClick.AddListener(CloseShop);
+
+        if (destroyCardButton != null)
+            destroyCardButton.onClick.AddListener(OpenDestroyMenu);
+
+        if (confirmDestroyButton != null)
+            confirmDestroyButton.onClick.AddListener(ConfirmDestroyCard);
     }
 
     public void OpenShop(Action onClose)
     {
         onShopClosed = onClose;
         shopPanel.SetActive(true);
+        destroyPanel.SetActive(false);
         UpdateMoneyUI();
         PopulateShop();
     }
@@ -56,7 +72,6 @@ public class ShopManager : MonoBehaviour
 
     private void PopulateShop()
     {
-        // Clear previous shop cards
         foreach (Transform child in shopContent)
             Destroy(child.gameObject);
 
@@ -68,12 +83,12 @@ public class ShopManager : MonoBehaviour
             Card card = tempPool[idx];
             tempPool.RemoveAt(idx);
 
-            // Instantiate CardUI like hand
+            // Instantiate Card UI
             CardUI cu = Instantiate(deckManager.cardUIPrefab, shopContent);
-            cu.Setup(card, null); // no DeckManager reference needed
-            cu.SetInteractable(true); // make sure button is clickable
+            cu.Setup(card, null);
+            cu.SetInteractable(true);
 
-            // Remove any default onClick (from CardUI)
+            // Add BuyCard listener
             Button btn = cu.GetComponent<Button>();
             if (btn != null)
             {
@@ -108,27 +123,108 @@ public class ShopManager : MonoBehaviour
             return;
         }
 
-        // Check if adding the card would exceed maxDeckSize
         if (deckManager.currentDeck.Count >= deckManager.maxDeckSize)
         {
             Debug.Log("Deck is full! Cannot buy " + card.cardName);
             return;
         }
 
-        // Deduct money and add card to currentDeck
+        // Deduct money
         PlayerStats.Money -= card.cost;
         deckManager.AddCardToDeck(card);
+        UpdateMoneyUI();
 
         // Remove the card from shop UI
         Destroy(cardGO);
+    }
 
-        // Update money display
+    private void OpenDestroyMenu()
+    {
+        if (PlayerStats.Money < destroyCardCost)
+        {
+            Debug.Log("Not enough money to destroy a card!");
+            return;
+        }
+
+        destroyPanel.SetActive(true);
+        PopulateDestroyList();
+        UpdateDestroyCostUI();
+    }
+
+    private void UpdateDestroyCostUI()
+    {
+        if (destroyCostText != null)
+            destroyCostText.text = $"Cost: {destroyCardCost}";
+    }
+
+    private void PopulateDestroyList()
+    {
+        foreach (Transform child in destroyContent)
+            Destroy(child.gameObject);
+
+        foreach (Card card in deckManager.currentDeck)
+        {
+            CardUI cu = Instantiate(deckManager.cardUIPrefab, destroyContent);
+            cu.Setup(card, null);
+            cu.SetInteractable(true);
+
+            Button btn = cu.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => SelectCardToDestroy(card, cu));
+            }
+        }
+
+        selectedDestroyCard = null;
+    }
+
+    private void SelectCardToDestroy(Card card, CardUI cu)
+    {
+        selectedDestroyCard = card;
+
+        foreach (Transform child in destroyContent)
+        {
+            Image img = child.GetComponent<Image>();
+            if (img != null)
+                img.color = Color.white;
+        }
+
+        Image selectedImg = cu.GetComponent<Image>();
+        if (selectedImg != null)
+            selectedImg.color = Color.red;
+    }
+
+    private void ConfirmDestroyCard()
+    {
+        if (selectedDestroyCard == null)
+        {
+            Debug.Log("No card selected to destroy.");
+            return;
+        }
+
+        if (PlayerStats.Money < destroyCardCost)
+        {
+            Debug.Log("Not enough money to destroy a card!");
+            return;
+        }
+
+        // Deduct cost and remove card
+        PlayerStats.Money -= destroyCardCost;
+        deckManager.RemoveCardFromDeck(selectedDestroyCard);
         UpdateMoneyUI();
+
+        Debug.Log("Destroyed card: " + selectedDestroyCard.cardName);
+
+        // Refresh UI
+        PopulateDestroyList();
+        destroyPanel.SetActive(false);
     }
 
     public void CloseShop()
     {
         shopPanel.SetActive(false);
+        destroyPanel.SetActive(false);
         onShopClosed?.Invoke();
     }
 }

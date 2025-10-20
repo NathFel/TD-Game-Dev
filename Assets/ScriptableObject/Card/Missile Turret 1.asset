@@ -16,6 +16,7 @@ MonoBehaviour:
   artwork: {fileID: 21300000, guid: a2d0b34c5e3b73748817e7a9bd12aecc, type: 3}
   description: '-'
   cardType: 0
+  rarity: 2
   towerPrefab: {fileID: 43144752293622142, guid: 0b9a61bd01441d442a68d6743f80f301, type: 3}
   bulletPrefab: {fileID: 6121220231508148939, guid: 62ac60b3363ef7a44a97c9cf6f69a306, type: 3}
   towerData:
@@ -23,7 +24,6 @@ MonoBehaviour:
     fireRate: 1
     turnSpeed: 100
     baseDamage: 50
-    bulletSpeed: 50
     useLaser: 0
     laserLength: 20
     laserWidth: 1
@@ -31,6 +31,9 @@ MonoBehaviour:
     pierce: 0
     bounce: 0
     AoERadius: 5
+    bulletSpeed: 50
+    burnChance: 0
+    burnDamage: 1
   cost: 100
   upgradeLevel: 0
   spellPrefab: {fileID: 0}

@@ -86,7 +86,7 @@ MonoBehaviour:
   impactEffect: {fileID: 5141525592140152699, guid: 9a27d98234936094b9efba9036b1ab0a, type: 3}
   targetingMode: 0
   yRotationOffset: 90
-  turretCard: {fileID: 11400000, guid: 1ef9be9f4b6534f4c8b9f327d40128b6, type: 2}
+  turretCard: {fileID: 11400000, guid: c855551e5a968d54cb65eb47be6c41d3, type: 2}
   rangeSpherePrefab: {fileID: 9057766349655395459, guid: ecc06ce0db9af4744b260bcf86809744, type: 3}
 --- !u!65 &1995448252234227015
 BoxCollider:

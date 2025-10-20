@@ -1,5 +1,4 @@
 using UnityEngine;
-using TMPro;
 
 public class EnemyHealthUI : MonoBehaviour
 {
@@ -8,13 +7,8 @@ public class EnemyHealthUI : MonoBehaviour
     public Vector3 healthBarOffset = new Vector3(0, 2f, 0);
     public float fixedHealthBarScale = 1f;
 
-    [Header("HP Text (Optional)")]
-    public TextMeshPro hpTextPrefab;
-    public Vector3 hpTextOffset = new Vector3(0, 0.3f, 0);
-
     private Transform healthBarInstance;
     private Transform healthBarFill;
-    private TextMeshPro hpTextInstance;
     private Camera mainCamera;
 
     private int maxHealth;
@@ -32,26 +26,14 @@ public class EnemyHealthUI : MonoBehaviour
             if (healthBarInstance != null)
                 healthBarInstance.localScale = Vector3.one * fixedHealthBarScale;
         }
-
-        // Spawn TMP HP Text
-        if (hpTextPrefab != null)
-        {
-            hpTextInstance = Instantiate(hpTextPrefab, transform.position + healthBarOffset + hpTextOffset, Quaternion.identity, transform);
-            hpTextInstance.fontSize = 3;
-        }
     }
 
     void LateUpdate()
     {
-        if (mainCamera != null)
+        if (mainCamera != null && healthBarInstance != null)
         {
             Quaternion cameraRotation = Quaternion.LookRotation(mainCamera.transform.forward);
-
-            if (healthBarInstance != null)
-                healthBarInstance.rotation = cameraRotation;
-
-            if (hpTextInstance != null)
-                hpTextInstance.transform.rotation = cameraRotation;
+            healthBarInstance.rotation = cameraRotation;
         }
     }
 
@@ -72,8 +54,5 @@ public class EnemyHealthUI : MonoBehaviour
             fillScale.x = healthPercent;
             healthBarFill.localScale = fillScale;
         }
-
-        if (hpTextInstance != null)
-            hpTextInstance.text = currentHealth.ToString();
     }
 }

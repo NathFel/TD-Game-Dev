@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class DeckManager : MonoBehaviour
 {
@@ -29,9 +31,15 @@ public class DeckManager : MonoBehaviour
      public List<Card> discardPile = new List<Card>();
 
     [Header("UI")]
+    public TMP_Text phaseText;
     public Transform handPanel;
     public CardUI cardUIPrefab;
     public float shopSpawnChance = 0.5f;
+
+    [Header("Deck UI Buttons")]
+    public Button showDeckButton;
+    public Button showDiscardButton;
+    public DeckListUI deckListUI;
 
     [Header("Wave Settings")]
     public int maxWave = 5;
@@ -63,6 +71,12 @@ public class DeckManager : MonoBehaviour
         currentDeck.AddRange(startingDeck);
         ShuffleDrawPile();
         StartPhase(GamePhase.DrawAndBuild);
+
+         if (showDeckButton != null)
+            showDeckButton.onClick.AddListener(() => deckListUI.ShowDeck(currentDeck, "Current Deck"));
+
+        if (showDiscardButton != null)
+            showDiscardButton.onClick.AddListener(() => deckListUI.ShowDeck(discardPile, "Discard Pile"));
     }
 
     void Update(){
@@ -72,6 +86,12 @@ public class DeckManager : MonoBehaviour
         {
             HandleRightClick();
         }
+    }
+
+    public void SetHandActive(bool active)
+    {
+        if (handPanel != null)
+            handPanel.gameObject.SetActive(active);
     }
 
     private void StartPhase(GamePhase phase)
@@ -91,6 +111,7 @@ public class DeckManager : MonoBehaviour
         
         currentPhase = phase;
         Debug.Log($"Starting Phase: {phase} | Round: {currentRound} | Wave: {currentWave}");
+        UpdatePhaseText($"{phase} Phase | Round: {currentRound} | Wave: {currentWave}");
 
         switch (phase)
         {
@@ -99,10 +120,19 @@ public class DeckManager : MonoBehaviour
                 DrawHand();
                 break;
             case GamePhase.Shop:
-                if (ShopManager.Instance != null)
+                if (ShopManager.Instance != null)      
+                    SetHandActive(false);
                     ShopManager.Instance.OpenShop(OnShopClosed);
                 break;
         }
+    }
+
+    private void UpdatePhaseText(string message)
+    {
+        if (phaseText != null)
+            phaseText.text = message;
+        else
+            Debug.LogWarning("TMP Text not assigned in the Inspector!");
     }
 
     private void ShuffleDrawPile()
@@ -183,6 +213,19 @@ public class DeckManager : MonoBehaviour
     public void DeselectCard()
     {
         selectedCardIndex = -1;
+    }
+
+    public void RemoveCardFromDeck(Card card)
+    {
+        if (currentDeck.Contains(card))
+        {
+            currentDeck.Remove(card);
+            Debug.Log("Removed " + card.cardName + " from deck.");
+        }
+        else
+        {
+            Debug.LogWarning("Tried to remove a card that isn’t in the deck: " + card.cardName);
+        }
     }
 
     public void HandleRightClick()
@@ -445,6 +488,7 @@ public class DeckManager : MonoBehaviour
     private void OnShopClosed()
     {
         // After shop: reshuffle, then draw fresh hand for Wave 1
+        SetHandActive(true);
         ShuffleDrawPile();
         StartPhase(GamePhase.DrawAndBuild);
     }
