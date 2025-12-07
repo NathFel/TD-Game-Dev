@@ -14,6 +14,7 @@ public class Turret : MonoBehaviour
     [Header("Turret Settings")]
     public TargetingMode targetingMode = TargetingMode.Closest;
     public float yRotationOffset = 90f;
+    public Animator animator;
 
     [Header("Card Settings")]
     public Card turretCard;
@@ -23,6 +24,62 @@ public class Turret : MonoBehaviour
     public GameObject rangeSpherePrefab; // Assign a transparent sphere prefab
     private GameObject rangeSphereInstance;
     private bool isSelected = false;
+
+    private Node node; 
+    private GameObject currentPreview;
+    private List<Transform> waypoints = new List<Transform>();
+    private List<Transform> reversedRoute = new List<Transform>();
+
+    private void Start()
+    {
+        node = GetComponentInParent<Node>(); 
+
+        GameObject wpRoot = GameObject.Find("waypoints");
+
+        if (wpRoot != null)
+        {
+            foreach (Transform child in wpRoot.transform)
+                waypoints.Add(child);
+            
+            reversedRoute = new List<Transform>(waypoints);
+            reversedRoute.Reverse();
+        }
+        else
+        {
+            Debug.LogWarning("No GameObject named 'Waypoints' found in scene!");
+        }
+    }
+
+    private void OnMouseEnter()
+    {
+        if (node == null) return;
+
+        // Remove previous preview if any
+        if (currentPreview != null) Destroy(currentPreview);
+
+        Vector3 spawnPos = node.transform.position;
+
+        // Use Node prefab and Y offsets
+        if (node.HasObject() && node.previewOccupiedPrefab != null)
+        {
+            spawnPos.y += node.occupiedYOffset;
+            currentPreview = Instantiate(node.previewOccupiedPrefab, spawnPos, Quaternion.identity);
+        }
+        else if (!node.HasObject() && node.previewEmptyPrefab != null)
+        {
+            spawnPos.y += node.emptyYOffset;
+            currentPreview = Instantiate(node.previewEmptyPrefab, spawnPos, Quaternion.identity);
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        if (currentPreview != null)
+        {
+            Destroy(currentPreview);
+            currentPreview = null;
+        }
+    }
 
     public enum TargetingMode
     {
@@ -37,6 +94,12 @@ public class Turret : MonoBehaviour
         HandleSelectionVisual();
 
         if (turretCard == null || turretCard.towerData == null) return;
+
+        if (turretCard.towerData.isSummoner)
+        {
+            HandleSummoner();
+            return; 
+        }
 
         UpdateTarget();
         
@@ -175,17 +238,68 @@ public class Turret : MonoBehaviour
     {
         if (turretCard.bulletPrefab == null) return;
 
+        if (animator != null)
+            animator.SetTrigger("Launch");
+
         GameObject bulletGO = Instantiate(turretCard.bulletPrefab, firePoint.position, firePoint.rotation);
+
+        // CATAPULT MODE
+        if (turretCard.towerData.isCatapult)
+        {
+            CatapultBullet cb = bulletGO.GetComponent<CatapultBullet>();
+            cb.Setup(turretCard.towerData);
+            cb.onHitEnemy += (Enemy e) => TryApplyBurn(e);
+            cb.Launch(target.position);
+
+            return;
+        }
+
+        // NORMAL BULLET
         Bullet bullet = bulletGO.GetComponent<Bullet>();
         if (bullet != null)
         {
             bullet.SetStats(target, turretCard.towerData.baseDamage, turretCard.towerData.bulletSpeed, turretCard.towerData);
-
-            bullet.onHitEnemy += (Enemy e) =>
-            {
-                TryApplyBurn(e);
-            };
+            bullet.onHitEnemy += (Enemy e) => TryApplyBurn(e);
         }
+    }
+
+    void HandleSummoner()
+    {
+        if (EnemyWaveManager.Instance.activeEnemies.Count <= 0) return;
+
+        fireCountdown -= Time.deltaTime;
+        if (fireCountdown <= 0f)
+        {
+            // Request global manager to spawn
+            SummonManager.Instance.RequestSummon(SummonMinion);
+
+            // reset turret's own fire countdown
+            fireCountdown = 1f / Mathf.Max(turretCard.towerData.fireRate, 0.01f);
+        }
+    }
+    
+
+    void SummonMinion()
+    {
+        if (reversedRoute == null || reversedRoute.Count == 0) return;
+
+        Transform start = reversedRoute[0];
+
+        Vector3 spawnPos =
+            start.position +
+            Vector3.up * turretCard.towerData.minionSpawnYOffset;
+
+        GameObject go = Instantiate(
+            turretCard.towerData.minionPrefab,
+            spawnPos,
+            Quaternion.identity
+        );
+
+        MinionUnit unit = go.GetComponent<MinionUnit>();
+        unit.hp = turretCard.towerData.baseDamage;
+        unit.moveSpeed = turretCard.towerData.minionSpeed;
+
+        unit.SetRoute(reversedRoute, turretCard.towerData.minionSpawnYOffset);
     }
 
     void Laser()

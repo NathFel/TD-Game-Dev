@@ -29,6 +29,7 @@ public class DeckManager : MonoBehaviour
      public List<Card> drawPile = new List<Card>();
      public List<Card> hand = new List<Card>();
      public List<Card> discardPile = new List<Card>();
+     public List<Card> playingCards = new List<Card>();
 
     [Header("UI")]
     public TMP_Text phaseText;
@@ -44,8 +45,10 @@ public class DeckManager : MonoBehaviour
     [Header("Wave Settings")]
     public int maxWave = 5;
 
-    private bool isPlacing = false;
+    [HideInInspector]public bool isPlacing = false;
     private CardUI placingCardUI = null;
+    
+    private Card currentPlayingCard;
 
     [HideInInspector]public int currentRound = 1;
     [HideInInspector]public int currentWave = 1;
@@ -69,6 +72,7 @@ public class DeckManager : MonoBehaviour
     void Start()
     {
         currentDeck.AddRange(startingDeck);
+        drawPile.AddRange(currentDeck);
         ShuffleDrawPile();
         StartPhase(GamePhase.DrawAndBuild);
 
@@ -137,8 +141,6 @@ public class DeckManager : MonoBehaviour
 
     private void ShuffleDrawPile()
     {
-        drawPile.Clear();
-        drawPile.AddRange(currentDeck);
         for (int i = 0; i < drawPile.Count; i++)
         {
             int rnd = Random.Range(0, drawPile.Count);
@@ -147,16 +149,50 @@ public class DeckManager : MonoBehaviour
             drawPile[i] = temp;
         }
     }
-
-    public void DrawHand()
+    private Card DrawOneCard()
     {
+        // If draw pile empty → refill from discard
+        if (drawPile.Count == 0)
+        {
+            if (discardPile.Count == 0) 
+                return null;
+
+            drawPile.AddRange(discardPile);
+            discardPile.Clear();
+            ShuffleDrawPile();
+        }
+
+        // Always take the TOP card (index 0)
+        Card c = drawPile[0];
+        drawPile.RemoveAt(0);
+        return c;
+    }
+
+    private void ResetDrawPileFromCurrentDeck()
+    {
+        drawPile.Clear();
+        drawPile.AddRange(currentDeck);
+        ShuffleDrawPile();
+    }
+
+    public void DrawHand(int drawCountOverride = -1)
+    {
+
         if (cardUIPrefab == null)
         {
             Debug.LogError("DeckManager: CardUIPrefab is not assigned!");
             return;
         }
 
-        int drawCount = firstDrawThisRound ? startingHandCount : handDrawPerRound;
+        if (firstDrawThisRound)
+        {
+            ResetDrawPileFromCurrentDeck();
+        }
+
+        int drawCount = (drawCountOverride >= 0)
+            ? drawCountOverride
+            : (firstDrawThisRound ? startingHandCount : handDrawPerRound);
+
         firstDrawThisRound = false;
 
         drawCount = Mathf.Min(drawCount, maxHandSize - hand.Count);
@@ -164,31 +200,19 @@ public class DeckManager : MonoBehaviour
 
         for (int i = 0; i < drawCount; i++)
         {
-            if (drawPile.Count == 0)
-            {
-                if (discardPile.Count == 0) break;
+            Card drawn = DrawOneCard();   
+            if (drawn == null) break;
 
-                drawPile.AddRange(discardPile);
-                discardPile.Clear();
-                ShuffleDrawPile();
-            }
-
-            int idx = Random.Range(0, drawPile.Count);
-            Card drawn = drawPile[idx];
-            drawPile.RemoveAt(idx);
             hand.Add(drawn);
 
             CardUI cu = Instantiate(cardUIPrefab, handPanel);
-            float xOffset = 1000f; // adjust as needed
-            Vector3 pos = cu.transform.localPosition; // get current position
-            pos.x += xOffset; // add offset
-            cu.transform.localPosition = pos; // apply new position
-
             cu.Setup(drawn, this);
         }
+
+        UpdateHandLayout();
     }
 
-    private void DiscardHand()
+    public void DiscardHand()
     {
         foreach (var card in hand)
             discardPile.Add(card);
@@ -304,37 +328,94 @@ public class DeckManager : MonoBehaviour
     }
 
 
-    // === Play, discard, shop, etc. (same as before) ===
     public void RequestPlayCard(Card card, CardUI cardUI)
     {
         if (card == null || cardUI == null) return;
 
+        if (!PlayerMana.Instance.CanAfford(card.manaCost))
+        {
+            Debug.Log("Not enough mana!");
+            DeselectCard();
+            return;
+        }
+
+
+
+        // ------------------------------------------------------------
+        //                     TOWER CARD
+        // ------------------------------------------------------------
         if (card.cardType == Card.CardType.Tower && card.towerPrefab != null)
         {
             if (currentPhase != GamePhase.DrawAndBuild)
             {
-                Debug.Log("Towers can only be placed during the Build phase.");
-                DeselectCard();
+                Debug.Log("Towers can only be placed during Build phase.");
+                OnPlacementCanceled();
                 return;
             }
+            // Move card from Hand → Playing
+            currentPlayingCard = card;
+            MoveCard(hand, playingCards, card);
 
-            if (isPlacing) return;
-
-            isPlacing = true;
             placingCardUI = cardUI;
             placingCardUI.SetInteractable(false);
 
+            if (isPlacing) return;
+            isPlacing = true;
+
             PlacementManager.Instance.StartPlacing(
                 card.towerPrefab,
-                onPlaced: () => OnCardPlaced(card),
+                onPlaced: () =>
+                {
+                    PlayerMana.Instance.Spend(card.manaCost);
+                    playingCards.Remove(card);
+                    OnCardPlaced(card);
+                },
                 onCanceled: () => OnPlacementCanceled()
             );
         }
+
+        // ------------------------------------------------------------
+        //                     SPELL CARD
+        // ------------------------------------------------------------
         else if (card.cardType == Card.CardType.Spell)
         {
             if (currentPhase != GamePhase.EnemyWave)
             {
                 Debug.Log("Spells can only be used during Enemy Wave phase.");
+                OnPlacementCanceled();
+                return;
+            }
+
+            // Move card from Hand → Playing
+            currentPlayingCard = card;
+            MoveCard(hand, playingCards, card);
+
+            placingCardUI = cardUI;
+            placingCardUI.SetInteractable(false);
+
+            if (isPlacing) return;
+            isPlacing = true;
+
+            SpellPlacementManager.Instance.StartPlacingSpell(
+                card,
+                onPlaced: () =>
+                {
+                    PlayerMana.Instance.Spend(card.manaCost);
+                    playingCards.Remove(card);
+                    OnUtilityPlaced(card);
+                },
+                onCanceled: () => OnPlacementCanceled()
+            );
+        }
+
+        // ------------------------------------------------------------
+        //                     UTILITY CARD
+        // ------------------------------------------------------------
+        else if (card.cardType == Card.CardType.Utility)
+        {
+            if (currentPhase != GamePhase.DrawAndBuild)
+            {
+                Debug.Log("Utility cards only work during Build Phase.");
                 DeselectCard();
                 return;
             }
@@ -342,27 +423,40 @@ public class DeckManager : MonoBehaviour
             if (isPlacing) return;
 
             isPlacing = true;
+            currentPlayingCard = card;
+
+            MoveCard(hand, playingCards, card);
+
             placingCardUI = cardUI;
             placingCardUI.SetInteractable(false);
 
-            SpellPlacementManager.Instance.StartPlacingSpell(
+            UtilityPlacementManager.Instance.StartPlacingUtility(
                 card,
-                onPlaced: () => OnCardPlaced(card),
-                onCanceled: () => OnPlacementCanceled()
+                onPlaced: () =>
+                {
+                    PlayerMana.Instance.Spend(card.manaCost);
+
+                    if (card.utilityEffect != null)
+                        card.utilityEffect.Execute();
+                    else
+                        Debug.LogWarning("No utility effect attached!");
+
+                    playingCards.Remove(card);
+                    OnCardPlaced(card);
+                },
+                onCanceled: () =>
+                {
+                    OnPlacementCanceled(); // sends card back to hand
+                }
             );
-        }
-        else if (card.cardType == Card.CardType.Upgrade)
-        {
-            if (currentPhase == GamePhase.DrawAndBuild)
-                OnCardPlaced(card);
         }
     }
 
+    // ============================================================
+    //                         ON PLACED
+    // ============================================================
     private void OnCardPlaced(Card card)
     {
-        if (hand.Contains(card))
-            hand.Remove(card);
-
         discardPile.Add(card);
 
         if (placingCardUI != null)
@@ -370,18 +464,49 @@ public class DeckManager : MonoBehaviour
 
         isPlacing = false;
         placingCardUI = null;
+        currentPlayingCard = null;
 
         DeselectCard();
     }
 
-    private void OnPlacementCanceled()
+    private void OnUtilityPlaced(Card card)
     {
+        discardPile.Add(card);
+
         if (placingCardUI != null)
-            placingCardUI.SetInteractable(true);
+            Destroy(placingCardUI.gameObject);
 
         isPlacing = false;
         placingCardUI = null;
+        currentPlayingCard = null;
+
+        DeselectCard();
     }
+
+    // ============================================================
+    //                     ON PLACEMENT CANCELED
+    // ============================================================
+    private void OnPlacementCanceled()
+    {
+        Debug.Log("Card placement canceled → returning to hand");
+
+        if (placingCardUI != null)
+            placingCardUI.SetInteractable(true);
+
+        // return the card to hand
+        if (currentPlayingCard != null)
+        {
+            playingCards.Remove(currentPlayingCard);
+            hand.Add(currentPlayingCard);
+        }
+        
+        isPlacing = false;
+        placingCardUI = null;
+        currentPlayingCard = null;
+
+        DeselectCard();
+    }
+
 
     public void AddCardToDeck(Card card)
     {
@@ -394,6 +519,15 @@ public class DeckManager : MonoBehaviour
         {
             Debug.Log("Deck is full! Cannot add " + card.cardName);
         }
+    }
+
+    private void MoveCard(List<Card> from, List<Card> to, Card card)
+    {
+        if (from != null && from.Contains(card))
+            from.Remove(card);
+
+        if (to != null)
+            to.Add(card);
     }
 
     public void StartWaveButton()
@@ -414,6 +548,8 @@ public class DeckManager : MonoBehaviour
 
     private void OnWaveComplete()
     {
+        SpellPlacementManager.Instance?.CancelPlacement();
+
         // Cleanup hand + board
         DiscardHand();
         ClearBoard();
@@ -424,6 +560,8 @@ public class DeckManager : MonoBehaviour
         if (currentWave > maxWave)
         {
             currentRound++;
+            PlayerMana.Instance.ReplenishMana();
+
             firstDrawThisRound = true;
             CollectAllCardsToDeck();
             
@@ -526,4 +664,9 @@ public class DeckManager : MonoBehaviour
             cu.SetInteractable(false);
         }
     }
+
+
+    // --- Utility Effects Scripts ---
+
+
 }

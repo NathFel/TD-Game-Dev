@@ -2,30 +2,50 @@ using UnityEngine;
 
 public class Node : MonoBehaviour
 {
-    [SerializeField] private Color hoverColor = Color.green;
-    [SerializeField] private Color occupiedColor = Color.red;
+    [SerializeField] private float yOffset = 0.5f; // for actual placement
 
+    public GameObject previewEmptyPrefab;   
+    public GameObject previewOccupiedPrefab;
+    public float emptyYOffset = 0.5f;
+    public float occupiedYOffset = 1f;      
+
+    private GameObject currentPreview;
     private Renderer rend;
-    private Color startColor;
-    private bool isOccupied = false;
 
+    private bool isOccupied = false;
     private GameObject currentObject; // store placed tower
+    
 
     private void Start()
     {
         rend = GetComponent<Renderer>();
-        startColor = rend.material.color;
     }
 
     private void OnMouseEnter()
     {
-        if (isOccupied) rend.material.color = occupiedColor;
-        else rend.material.color = hoverColor;
+        if (currentPreview != null) Destroy(currentPreview);
+
+        Vector3 spawnPos = transform.position;
+
+        if (isOccupied && previewOccupiedPrefab != null)
+        {
+            spawnPos.y += occupiedYOffset;
+            currentPreview = Instantiate(previewOccupiedPrefab, spawnPos, Quaternion.identity);
+        }
+        else if (!isOccupied && previewEmptyPrefab != null)
+        {
+            spawnPos.y += emptyYOffset;
+            currentPreview = Instantiate(previewEmptyPrefab, spawnPos, Quaternion.identity);
+        }
     }
 
     private void OnMouseExit()
     {
-        rend.material.color = startColor;
+        if (currentPreview != null)
+        {
+            Destroy(currentPreview);
+            currentPreview = null;
+        }
     }
 
     private void OnMouseDown()
@@ -35,7 +55,10 @@ public class Node : MonoBehaviour
 
     public Vector3 GetBuildPosition()
     {
-        return transform.position;
+        // Build position uses yOffset for actual placement
+        Vector3 pos = transform.position;
+        pos.y += yOffset;
+        return pos;
     }
 
     public void SetOccupied(bool occupied, GameObject placedObj = null)
@@ -58,8 +81,5 @@ public class Node : MonoBehaviour
         }
 
         isOccupied = false;
-
-        if (rend != null)
-            rend.material.color = startColor;
     }
 }

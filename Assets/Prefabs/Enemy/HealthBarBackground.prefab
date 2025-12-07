@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 8671514021988278506}
   - component: {fileID: 1243158249877580213}
   - component: {fileID: 5963887903767914856}
-  m_Layer: 5
+  - component: {fileID: 3838131965556942890}
+  m_Layer: 8
   m_Name: HealthBarBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -142,6 +143,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &3838131965556942890
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2353490939804179826}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &5856904003387598762
 GameObject:
   m_ObjectHideFlags: 0
@@ -153,7 +166,7 @@ GameObject:
   - component: {fileID: 607749580814142364}
   - component: {fileID: 8845369325049294348}
   - component: {fileID: 4568085731564759198}
-  m_Layer: 5
+  m_Layer: 8
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -200,7 +213,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 0.5764706}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

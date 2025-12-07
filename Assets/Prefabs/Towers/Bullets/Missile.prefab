@@ -93,8 +93,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6973724236420138616}
   - component: {fileID: 7089135357596090769}
-  - component: {fileID: -7265459552108763888}
   - component: {fileID: 8552841285792647855}
+  - component: {fileID: 5443344499563138826}
   m_Layer: 0
   m_Name: Missile
   m_TagString: Untagged
@@ -130,28 +130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5b4bd79b5cd56843a02d1a7690ce6cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  impactEffect: {fileID: 949529852437940240, guid: 0e12658301c78fc4bb59eee35eb4df57, type: 3}
---- !u!135 &-7265459552108763888
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6121220231508148939}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  AoEIndicatorPrefab: {fileID: 0}
 --- !u!54 &8552841285792647855
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -179,3 +158,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 126
   m_CollisionDetection: 0
+--- !u!135 &5443344499563138826
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6121220231508148939}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.2
+  m_Center: {x: 0, y: 0, z: 0.5}

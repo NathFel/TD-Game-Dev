@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d061559bb9b778e4590ae51f7865b42d, type: 3}
+  m_Name: ChessKing
+  m_EditorClassIdentifier: 
+  cardName: Chess King
+  artwork: {fileID: 0}
+  description: 
+  cardType: 0
+  rarity: 2
+  manaCost: 3
+  towerPrefab: {fileID: 2494963385197660781, guid: 1841a5fcf8a738746bcc3dee71f88a9e, type: 3}
+  bulletPrefab: {fileID: 0}
+  towerData:
+    range: 0
+    fireRate: 0.1
+    turnSpeed: 10
+    baseDamage: 150
+    isSummoner: 1
+    minionPrefab: {fileID: 3266631286825490708, guid: 930911590f6fab24ba8c38a9a532f292, type: 3}
+    minionSpeed: 3
+    minionSpawnYOffset: -0.6
+    useLaser: 0
+    laserLength: 20
+    laserWidth: 1
+    isCatapult: 0
+    arcHeight: 5
+    damageOverTime: 10
+    isSeeking: 0
+    pierce: 0
+    bounce: 0
+    AoERadius: 0
+    impactPrefab: {fileID: 0}
+    AoEDuration: 0.1
+    AoEInterval: 1
+    bulletSpeed: 70
+    burnChance: 0
+    burnDamage: 1
+  cost: 0
+  upgradeLevel: 0
+  spellPrefab: {fileID: 0}
+  spellImpactPrefab: {fileID: 0}
+  spellPower: 0
+  spellDuration: 0
+  spellInterval: 0.5
+  spellRadius: 0
+  spellSpeed: 0
+  isFreezeSpell: 0
+  freezeDuration: 0
+  freezeAmount: 0
+  utilityEffect: {fileID: 0}

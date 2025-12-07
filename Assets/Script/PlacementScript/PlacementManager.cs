@@ -102,6 +102,7 @@ public class PlacementManager : MonoBehaviour
         return;
 
         GameObject placed = Instantiate(objectToPlacePrefab, node.GetBuildPosition(), Quaternion.identity);
+        placed.transform.SetParent(node.transform);
         node.SetOccupied(true, placed);
 
         CleanupGhost();

@@ -17,27 +17,40 @@ MonoBehaviour:
   description: '-'
   cardType: 0
   rarity: 2
+  manaCost: 1
   towerPrefab: {fileID: 43144752293622142, guid: 0b9a61bd01441d442a68d6743f80f301, type: 3}
   bulletPrefab: {fileID: 6121220231508148939, guid: 62ac60b3363ef7a44a97c9cf6f69a306, type: 3}
   towerData:
     range: 15
     fireRate: 1
     turnSpeed: 100
-    baseDamage: 50
+    baseDamage: 1
     useLaser: 0
     laserLength: 20
     laserWidth: 1
+    isCatapult: 0
+    arcHeight: 5
+    damageOverTime: 10
     isSeeking: 1
     pierce: 0
-    bounce: 0
+    bounce: 2
     AoERadius: 5
+    impactPrefab: {fileID: 9057766349655395459, guid: ecc06ce0db9af4744b260bcf86809744, type: 3}
+    AoEDuration: 5
+    AoEInterval: 1
     bulletSpeed: 50
     burnChance: 0
     burnDamage: 1
   cost: 100
   upgradeLevel: 0
   spellPrefab: {fileID: 0}
+  spellImpactPrefab: {fileID: 0}
   spellPower: 0
   spellDuration: 0
+  spellInterval: 0.5
   spellRadius: 0
   spellSpeed: 0
+  isFreezeSpell: 0
+  freezeDuration: 0
+  freezeAmount: 0
+  utilityEffect: {fileID: 0}

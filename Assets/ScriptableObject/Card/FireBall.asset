@@ -16,6 +16,8 @@ MonoBehaviour:
   artwork: {fileID: 0}
   description: '-'
   cardType: 1
+  rarity: 0
+  manaCost: 1
   towerPrefab: {fileID: 0}
   bulletPrefab: {fileID: 0}
   towerData:
@@ -36,7 +38,13 @@ MonoBehaviour:
   cost: 100
   upgradeLevel: 0
   spellPrefab: {fileID: 950649848767671616, guid: 5ab4f4f0796e54f4a811e84906e3bc91, type: 3}
-  spellPower: 100
-  spellDuration: 2
+  spellImpactPrefab: {fileID: 1500939685962906276, guid: 5534bc9e5edff5a48882acb0b26d3c0f, type: 3}
+  spellPower: 50
+  spellDuration: 0.5
+  spellInterval: 0.5
   spellRadius: 5
   spellSpeed: 1
+  isFreezeSpell: 0
+  freezeDuration: 0
+  freezeAmount: 0
+  utilityEffect: {fileID: 0}

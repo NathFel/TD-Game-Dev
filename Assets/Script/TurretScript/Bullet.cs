@@ -11,10 +11,11 @@ public class Bullet : MonoBehaviour
     private int bouncesLeft;
     private float AoERadius;
     private float bounceRadius = 1000f;
+    private TowerData dataReference;
 
     private Vector3 direction;
 
-    public GameObject impactEffect;
+    public GameObject AoEIndicatorPrefab;
 
     private float lifetime = 5f;
 
@@ -32,6 +33,7 @@ public class Bullet : MonoBehaviour
             piercesLeft = data.pierce;
             bouncesLeft = data.bounce;
             AoERadius = data.AoERadius;
+            dataReference = data;
         }
 
         direction = (target != null) ? (target.position - transform.position).normalized : transform.forward;
@@ -80,6 +82,25 @@ public class Bullet : MonoBehaviour
 
     void AoE()
     {
+        // spawn indicator from tower data
+        if (dataReference != null && dataReference.impactPrefab != null)
+        {
+            GameObject indicator = Instantiate(
+                dataReference.impactPrefab,
+                new Vector3(transform.position.x, 0.6f, transform.position.z),
+                Quaternion.identity
+            );
+
+            indicator.transform.localScale = new Vector3(
+                AoERadius * 2f,
+                0.3f,
+                AoERadius * 2f
+            );
+
+            Destroy(indicator, .2f);
+        }
+
+        // damage enemies
         Collider[] colliders = Physics.OverlapSphere(transform.position, AoERadius);
         foreach (Collider c in colliders)
             if (c.CompareTag("Enemy")) Damage(c.transform);

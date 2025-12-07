@@ -25,8 +25,8 @@ Transform:
   m_GameObject: {fileID: 26849104003313481}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: -0.2, z: 0}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2248878820791655318}
@@ -106,8 +106,6 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 2353490939804179826, guid: 5d3f0b798c437f54fb2564f19687b600, type: 3}
   healthBarOffset: {x: 0, y: 2, z: 0}
   fixedHealthBarScale: 0.5
-  hpTextPrefab: {fileID: 6449264485050426476, guid: e33d81622695ed748adbab4d89e197d3, type: 3}
-  hpTextOffset: {x: 0, y: 0.3, z: 0}
 --- !u!114 &-8100736965273429858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,10 +145,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.2
+  m_Radius: 0.22
   m_Height: 1.0043124
   m_Direction: 1
-  m_Center: {x: 0, y: 0.38848978, z: 0}
+  m_Center: {x: 0, y: 0.2, z: 0}
 --- !u!23 &-4989111513448834509
 MeshRenderer:
   m_ObjectHideFlags: 0

@@ -28,11 +28,17 @@ public class Enemy : MonoBehaviour
     private GameObject activeBurnEffect;
     private Coroutine burnCoroutine;
 
-    private int currentHealth;
+    // --- Freeze ---
+    private bool isFrozen = false;
+    private float originalSpeed;
+
+    // --- Enemy Settings ---
+    [HideInInspector]public int currentHealth;
     private int maxHealth;
     private Transform startPoint;
     private Transform endPoint;
     private EnemyHealthUI healthUI;
+    private int damageToPlayer;
 
     public int Health => currentHealth;
     public int MaxHealth => maxHealth;
@@ -45,6 +51,7 @@ public class Enemy : MonoBehaviour
         maxHealth = enemyType != null ? Mathf.RoundToInt(baseHealth * enemyType.healthMultiplier) : baseHealth;
         currentHealth = maxHealth;
         healthUI?.SetMaxHealth(maxHealth);
+        damageToPlayer = enemyType.enemyDamage;
     }
 
     void OnEnable()
@@ -168,6 +175,29 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public void ApplyFreeze(float duration, float slowMultiplier)
+    {
+        if (!isFrozen)
+        {
+            isFrozen = true;
+            originalSpeed = speed;
+            speed *= slowMultiplier; // slow enemy
+            StartCoroutine(FreezeTimer(duration));
+        }
+        else
+        {
+            StopAllCoroutines();
+            StartCoroutine(FreezeTimer(duration)); // refresh timer if hit again
+        }
+    }
+
+    private IEnumerator FreezeTimer(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        speed = originalSpeed; // restore speed
+        isFrozen = false;
+    }
+
     void Die()
     {
         if (deathEffect != null)
@@ -189,7 +219,7 @@ public class Enemy : MonoBehaviour
 
     void EndPath()
     {
-        PlayerStats.Hp--;
+        PlayerStats.Hp -= damageToPlayer;
         EnemyWaveManager.Instance.UnregisterEnemy(this);
         EnemyWaveManager.Instance.EnemyDied(this);
         Destroy(gameObject);

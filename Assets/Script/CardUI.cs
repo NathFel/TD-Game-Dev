@@ -11,6 +11,7 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] private Image artworkImage;
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField] private Image rarityBackground;
+    [SerializeField] private TMP_Text manaCostText;
 
     private Button button;
     private DeckManager deckManager;
@@ -87,6 +88,9 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         if (nameText != null) nameText.text = card.cardName;
         if (artworkImage != null) artworkImage.sprite = card.artwork;
         if (descriptionText != null) descriptionText.text = card.description;
+
+        if (manaCostText != null)
+            manaCostText.text = card.manaCost.ToString();
 
         // Set rarity color
         if (rarityBackground != null)

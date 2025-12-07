@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d061559bb9b778e4590ae51f7865b42d, type: 3}
+  m_Name: Replenish
+  m_EditorClassIdentifier: 
+  cardName: Replenish
+  artwork: {fileID: 0}
+  description: Discard Hand Draw 5
+  cardType: 2
+  rarity: 0
+  manaCost: 2
+  towerPrefab: {fileID: 0}
+  bulletPrefab: {fileID: 0}
+  towerData:
+    range: 15
+    fireRate: 1
+    turnSpeed: 10
+    baseDamage: 50
+    useLaser: 0
+    laserLength: 20
+    laserWidth: 1
+    isSeeking: 0
+    pierce: 0
+    bounce: 0
+    AoERadius: 0
+    bulletSpeed: 70
+    burnChance: 0
+    burnDamage: 1
+  cost: 0
+  upgradeLevel: 0
+  spellPrefab: {fileID: 0}
+  spellImpactPrefab: {fileID: 0}
+  spellPower: 0
+  spellDuration: 0
+  spellInterval: 0.5
+  spellRadius: 0
+  spellSpeed: 0
+  isFreezeSpell: 0
+  freezeDuration: 0
+  freezeAmount: 0
+  utilityEffect: {fileID: 11400000, guid: ff5cbb14bd073634895fdbc9551e1eca, type: 2}

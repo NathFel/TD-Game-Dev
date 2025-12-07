@@ -10,4 +10,5 @@ public class EnemyTypeDataSO : ScriptableObject
     public float moneyMultiplier = 1f;
     public int minRoundToSpawn = 1;     
     public float spawnWeight = 1f;    
+    public int enemyDamage = 2;
 }
