@@ -13,6 +13,10 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] private Image rarityBackground;
     [SerializeField] private TMP_Text manaCostText;
 
+    // --- FITUR BARU: Slider Transparansi ---
+    [Range(0f, 1f)] 
+    [SerializeField] private float cardAlpha = 0.85f; // Default agak transparan (85%)
+
     private Button button;
     private DeckManager deckManager;
 
@@ -92,7 +96,7 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         if (manaCostText != null)
             manaCostText.text = card.manaCost.ToString();
 
-        // Set rarity color
+        // Set rarity color (Script akan otomatis baca settingan Alpha kamu disini)
         if (rarityBackground != null)
             SetRarity(card.rarity);
 
@@ -131,7 +135,7 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         deckManager.SelectCard(index);
     }
 
-    // ===== Rarity System =====
+    // ===== Rarity System (UPDATED) =====
     public void SetRarity(Rarity rarity)
     {
         string hexColor = "#808080"; // Default: Common (gray)
@@ -141,7 +145,7 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
                 hexColor = "#808080"; // Gray
                 break;
             case Rarity.Rare:
-                hexColor = "#0e56dbff"; // Blue
+                hexColor = "#0e56db"; // Blue (FF dibuang biar bisa diatur alpha-nya)
                 break;
             case Rarity.Epic:
                 hexColor = "#9B59B6"; // Magenta/Purple
@@ -152,7 +156,11 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         }
 
         if (ColorUtility.TryParseHtmlString(hexColor, out Color color))
+        {
+            // INI PERBAIKANNYA: Paksa alpha ikut settingan slider
+            color.a = cardAlpha; 
             rarityBackground.color = color;
+        }
     }
 
     // ===== Shop / Buy Mode =====
