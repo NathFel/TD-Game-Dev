@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
+// Memastikan object ini punya AudioSource
+[RequireComponent(typeof(AudioSource))]
 public class Spell : MonoBehaviour
 {
     [HideInInspector] public int power = 10;
@@ -25,11 +27,32 @@ public class Spell : MonoBehaviour
     public GameObject lastingParticlesPrefab; // Efek Area/Lingkaran di tanah (Durasi)
     public Renderer spellRenderer;  // Bola spell yang melayang
 
+    [Header("Audio SFX")]
+    public AudioClip launchSFX;     // Suara saat ditembak (Whoosh)
+    public AudioClip impactSFX;     // Suara saat meledak (Boom)
+    public AudioClip aoeLoopSFX;    // Suara area (Burning/Freezing loop)
+    
+    [Range(0f, 1f)] public float loopVolume = 0.3f; // Volume untuk loop (default 0.3)
+    
+    private AudioSource audioSource;
+
+    private void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     public void Launch(Vector3 start, Vector3 target)
     {
         transform.position = start;
         targetPosition = target;
         nextTickTime = 0f;
+
+        // --- AUDIO: Play Launch Sound ---
+        if (launchSFX != null)
+        {
+            audioSource.PlayOneShot(launchSFX);
+        }
+
         StartCoroutine(MoveToTarget());
     }
 
@@ -56,65 +79,59 @@ public class Spell : MonoBehaviour
         transform.position = targetPosition;
         hasLanded = true;
 
+        // --- AUDIO: Play Impact Sound ---
+        if (impactSFX != null)
+        {
+            // Menggunakan PlayOneShot agar bisa menumpuk dengan suara launch jika belum selesai
+            audioSource.PlayOneShot(impactSFX);
+        }
+
         // 1. Sembunyikan Bola Spell
         if (spellRenderer != null)
+        {
             spellRenderer.enabled = false;
+        }
+        else
+        {
+            var fallbackRenderer = GetComponentInChildren<Renderer>();
+            if (fallbackRenderer != null) fallbackRenderer.enabled = false;
+        }
 
-        // 2. Spawn IMPACT (Ledakan DUAR!)
+        // 2. Spawn IMPACT (Visual Ledakan)
         if (impactPrefab != null)
         {
-            // Munculkan agak tinggi dikit (y + 1) biar gak ketelen tanah
             Vector3 impactPos = targetPosition + Vector3.up * 1f; 
             GameObject impact = Instantiate(impactPrefab, impactPos, Quaternion.identity);
             
-            // Reset transform to avoid inherited scaling/rotation
             impact.transform.rotation = Quaternion.identity;
             impact.transform.localScale = Vector3.one; 
 
-            // Try to play ALL particle systems in the prefab hierarchy
             var systems = impact.GetComponentsInChildren<ParticleSystem>(true);
             if (systems != null && systems.Length > 0)
             {
-                // Enable emission and play
                 foreach (var ps in systems)
                 {
                     var emission = ps.emission;
                     emission.enabled = true;
                     ps.Play(true);
-                    // Force a small burst if emission was disabled in the asset
                     ps.Emit(5);
                 }
-
-                // Compute a safe lifetime: max of durations + lifetimes
-                float maxLifetime = 0f;
-                foreach (var ps in systems)
-                {
-                    var main = ps.main;
-                    float duration = main.duration;
-                    float lifetime = main.startLifetime.constantMax;
-                    maxLifetime = Mathf.Max(maxLifetime, duration + lifetime + 0.5f);
-                }
-                Destroy(impact, Mathf.Max(2f, maxLifetime));
+                Destroy(impact, 3f); // Simplified destroy logic for readability
             }
             else
             {
-                // No particle systems found – keep object briefly so we can see it
-                Debug.LogWarning("Impact prefab has no ParticleSystem components in root or children.");
-                Destroy(impact, 3f);
+                 // Handle CFXR or generic destroy
+                 Destroy(impact, 3f);
             }
         }
 
         // 3. Spawn LASTING PARTICLES (Bekas Area di Tanah)
         if (lastingParticlesPrefab != null)
         {
-            Vector3 groundPos = targetPosition + Vector3.up * 0.1f; // Dikit aja di atas tanah
+            Vector3 groundPos = targetPosition + Vector3.up * 0.1f;
             GameObject particles = Instantiate(lastingParticlesPrefab, groundPos, Quaternion.identity);
-
-            // Sesuaikan lebar partikel dengan Radius Spell
-            // (Y dibikin tipis karena nempel tanah)
             particles.transform.localScale = new Vector3(radius * 2f, 1f, radius * 2f);
-
-            Destroy(particles, Duration); // Hapus setelah durasi spell habis
+            Destroy(particles, Duration);
         }
 
         // Mulai logika damage area
@@ -124,6 +141,15 @@ public class Spell : MonoBehaviour
 
     private IEnumerator ApplyAoE()
     {
+        // --- AUDIO: Play Loop Sound (Jika ada) ---
+        if (aoeLoopSFX != null)
+        {
+            audioSource.clip = aoeLoopSFX;
+            audioSource.loop = true; // Set agar mengulang terus
+            audioSource.volume = loopVolume; // Atur volume sesuai setting
+            audioSource.Play();
+        }
+
         float elapsed = 0f;
         while (elapsed < Duration)
         {
@@ -143,10 +169,17 @@ public class Spell : MonoBehaviour
                 nextTickTime = Time.time + interval;
             }
             elapsed += Time.deltaTime;
+            
+            // --- AUDIO: Fade out volume di akhir durasi (smooth transition) ---
+            if (aoeLoopSFX != null && elapsed > Duration - 0.5f)
+            {
+                audioSource.volume = Mathf.Lerp(loopVolume, 0f, (elapsed - (Duration - 0.5f)) / 0.5f);
+            }
+            
             yield return null;
         }
 
-        Destroy(gameObject); // Hancurkan object spell utama
+        Destroy(gameObject); // Hancurkan object spell utama (suara loop akan mati otomatis)
     }
 
     private void OnDrawGizmosSelected()

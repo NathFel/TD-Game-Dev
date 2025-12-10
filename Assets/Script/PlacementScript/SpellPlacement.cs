@@ -81,8 +81,23 @@ public class SpellPlacementManager : MonoBehaviour
             spell.freezeDuration = spellCard.freezeDuration;
             spell.freezeSlowMultiplier = spellCard.freezeAmount;
 
-            // <-- Assign impact prefab from the card
-            spell.impactPrefab = spellCard.spellImpactPrefab;
+            // <-- Assign impact prefab from the card if provided; otherwise keep prefab's default
+            // Prefer card's impact prefab only if it looks like a real FX (has ParticleSystem or CFXR_Effect)
+            if (spellCard.spellImpactPrefab != null)
+            {
+                bool hasPS = spellCard.spellImpactPrefab.GetComponentInChildren<ParticleSystem>(true) != null;
+                bool hasCFXR = spellCard.spellImpactPrefab.GetComponentInChildren<CartoonFX.CFXR_Effect>(true) != null;
+                if (hasPS || hasCFXR)
+                {
+                    spell.impactPrefab = spellCard.spellImpactPrefab;
+                }
+                else
+                {
+                    Debug.LogWarning($"Card '{spellCard.cardName}' impact prefab '{spellCard.spellImpactPrefab.name}' has no ParticleSystem/CFXR_Effect. Using Spell prefab's impact instead.");
+                }
+            }
+
+            Debug.Log($"Placing spell '{spellCard.cardName}' with impact prefab: '{(spell.impactPrefab != null ? spell.impactPrefab.name : "<none>")}'");
 
             // Optional: assign Renderer for hiding projectile
             spell.spellRenderer = spellObj.GetComponentInChildren<Renderer>();

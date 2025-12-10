@@ -128,6 +128,7 @@ MonoBehaviour:
   segmentProgress: 0
   deathEffect: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
   burnEffectPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
+  damagePopupPrefab: {fileID: 6065578289920115845, guid: 24cac0b9d440acf4bbc251c244713217, type: 3}
   currentHealth: 0
 --- !u!114 &4249640645505178356
 MonoBehaviour:
@@ -143,7 +144,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthBarPrefab: {fileID: 2353490939804179826, guid: 5d3f0b798c437f54fb2564f19687b600, type: 3}
   healthBarOffset: {x: 0, y: 2, z: 0}
-  fixedHealthBarScale: 1
+  fixedHealthBarScale: 0.2
 --- !u!1 &2847915059861605049
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,7 +3,10 @@ guid: 4c709ec0427498545af9317fefada2e5
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - ghostMaterial: {instanceID: 0}
+  - blockedGhostMaterial: {fileID: 2100000, guid: 4283ecd8f7cab3a4596ed64d2b1fb838, type: 2}
+  - rangeSpherePrefab: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

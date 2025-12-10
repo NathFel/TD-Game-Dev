@@ -20,8 +20,17 @@ public class Turret : MonoBehaviour
     public Card turretCard;
     private float fireCountdown = 0f;
 
+    // === TAMBAHAN AUDIO START ===
+    [Header("Audio Settings")]
+    public AudioSource audioSource; // Drag AudioSource component di sini
+    public AudioClip placeSound;    // Suara saat tower ditaruh
+    public AudioClip shootSound;    // Suara saat nembak
+    public AudioClip laserLoopSound; // Suara dengung laser (pastikan dicentang Loop di file audionya kalau bisa)
+    public AudioClip summonSound;   // Suara saat minion disummon
+    // === TAMBAHAN AUDIO END ===
+
     [Header("Selection Settings")]
-    public GameObject rangeSpherePrefab; // Assign a transparent sphere prefab
+    public GameObject rangeSpherePrefab; 
     private GameObject rangeSphereInstance;
     private bool isSelected = false;
 
@@ -32,7 +41,34 @@ public class Turret : MonoBehaviour
 
     private void Start()
     {
-        node = GetComponentInParent<Node>(); 
+        node = GetComponentInParent<Node>();
+        
+        // === AUTO-DETECT OR CREATE AUDIOSOURCE IF NOT ASSIGNED ===
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+        
+        // If still null, create one
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            Debug.Log("AudioSource created automatically on " + gameObject.name);
+        }
+        
+        // === SETUP 3D AUDIO ===
+        audioSource.spatialBlend = 1f; // 1 = fully 3D, 0 = fully 2D
+        audioSource.dopplerLevel = 0.5f;
+        audioSource.maxDistance = 50f; // How far the sound can be heard
+        audioSource.minDistance = 1f;  // Where the sound starts to attenuate
+        // ============================
+
+        // === TAMBAHAN AUDIO: Mainkan suara place saat tower muncul ===
+        if (audioSource != null && placeSound != null)
+        {
+            audioSource.PlayOneShot(placeSound);
+        }
+        // ============================================================
 
         GameObject wpRoot = GameObject.Find("waypoints");
 
@@ -50,16 +86,14 @@ public class Turret : MonoBehaviour
         }
     }
 
+    // ... (Bagian Mouse Enter/Exit tidak berubah) ...
     private void OnMouseEnter()
     {
         if (node == null) return;
-
-        // Remove previous preview if any
         if (currentPreview != null) Destroy(currentPreview);
 
         Vector3 spawnPos = node.transform.position;
 
-        // Use Node prefab and Y offsets
         if (node.HasObject() && node.previewOccupiedPrefab != null)
         {
             spawnPos.y += node.occupiedYOffset;
@@ -126,13 +160,13 @@ public class Turret : MonoBehaviour
         }
     }
 
+    // ... (HandleSelectionVisual, Select, Deselect, OnDestroy tidak berubah) ...
     private void HandleSelectionVisual()
     {
         if (isSelected)
         {
             if (rangeSphereInstance == null && rangeSpherePrefab != null)
             {
-                // Offset Y by 5 units
                 Vector3 spawnPos = transform.position + Vector3.up * 0.5f;
                 rangeSphereInstance = Instantiate(rangeSpherePrefab, spawnPos, Quaternion.identity);
 
@@ -147,8 +181,6 @@ public class Turret : MonoBehaviour
                 Destroy(rangeSphereInstance);
             }
         }
-
-        
     }
 
     public void Select()
@@ -171,6 +203,7 @@ public class Turret : MonoBehaviour
         }
     }
 
+    // ... (UpdateTarget Logic tidak berubah) ...
     void UpdateTarget()
     {
         List<Enemy> enemies = EnemyWaveManager.Instance.activeEnemies;
@@ -238,12 +271,19 @@ public class Turret : MonoBehaviour
     {
         if (turretCard.bulletPrefab == null) return;
 
+        // === TAMBAHAN AUDIO: Suara Tembak ===
+        if (audioSource != null && shootSound != null)
+        {
+            // Gunakan PlayOneShot agar suara bisa menumpuk (kalau attack speed tinggi)
+            audioSource.PlayOneShot(shootSound);
+        }
+        // ====================================
+
         if (animator != null)
             animator.SetTrigger("Launch");
 
         GameObject bulletGO = Instantiate(turretCard.bulletPrefab, firePoint.position, firePoint.rotation);
 
-        // CATAPULT MODE
         if (turretCard.towerData.isCatapult)
         {
             CatapultBullet cb = bulletGO.GetComponent<CatapultBullet>();
@@ -254,7 +294,6 @@ public class Turret : MonoBehaviour
             return;
         }
 
-        // NORMAL BULLET
         Bullet bullet = bulletGO.GetComponent<Bullet>();
         if (bullet != null)
         {
@@ -270,35 +309,45 @@ public class Turret : MonoBehaviour
         fireCountdown -= Time.deltaTime;
         if (fireCountdown <= 0f)
         {
-            // Request global manager to spawn
             SummonManager.Instance.RequestSummon(SummonMinion);
-
-            // reset turret's own fire countdown
             fireCountdown = 1f / Mathf.Max(turretCard.towerData.fireRate, 0.01f);
         }
     }
     
-
     void SummonMinion()
     {
+        // ... (Logic summon tidak berubah) ...
         if (reversedRoute == null || reversedRoute.Count == 0) return;
 
         Transform start = reversedRoute[0];
+        Vector3 spawnPos = start.position + Vector3.up * turretCard.towerData.minionSpawnYOffset;
 
-        Vector3 spawnPos =
-            start.position +
-            Vector3.up * turretCard.towerData.minionSpawnYOffset;
+        GameObject go = Instantiate(turretCard.towerData.minionPrefab, spawnPos, Quaternion.identity);
 
-        GameObject go = Instantiate(
-            turretCard.towerData.minionPrefab,
-            spawnPos,
-            Quaternion.identity
-        );
+        // === AUDIO: Play summon sound ===
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+        
+        if (audioSource != null && summonSound != null)
+        {
+            Debug.Log("Playing summon sound for chess tower");
+            audioSource.PlayOneShot(summonSound);
+        }
+        else if (summonSound == null)
+        {
+            Debug.LogWarning("Summon sound clip not assigned on chess tower!");
+        }
+        else if (audioSource == null)
+        {
+            Debug.LogWarning("AudioSource not found on chess tower!");
+        }
+        // ================================
 
         MinionUnit unit = go.GetComponent<MinionUnit>();
         unit.hp = turretCard.towerData.baseDamage;
         unit.moveSpeed = turretCard.towerData.minionSpeed;
-
         unit.SetRoute(reversedRoute, turretCard.towerData.minionSpawnYOffset);
     }
 
@@ -308,6 +357,15 @@ public class Turret : MonoBehaviour
         {
             lineRenderer.enabled = true;
             impactEffect.Play();
+
+            // === TAMBAHAN AUDIO: Mulai Loop Laser ===
+            if (audioSource != null && laserLoopSound != null)
+            {
+                audioSource.clip = laserLoopSound;
+                audioSource.loop = true; // Pastikan loop nyala
+                audioSource.Play();
+            }
+            // ========================================
         }
 
         Quaternion laserRotation = Quaternion.Euler(0f, -90f, 0f) * firePoint.rotation;
@@ -344,7 +402,6 @@ public class Turret : MonoBehaviour
     void TryApplyBurn(Enemy e)
     {
         if (turretCard.towerData.burnChance <= 0f) return;
-
         if (Random.value <= turretCard.towerData.burnChance)
         {
             e.ApplyBurn(turretCard.towerData.burnDamage);
@@ -357,6 +414,15 @@ public class Turret : MonoBehaviour
         {
             lineRenderer.enabled = false;
             impactEffect.Stop();
+
+            // === TAMBAHAN AUDIO: Stop Loop Laser ===
+            if (audioSource != null && audioSource.isPlaying && audioSource.clip == laserLoopSound)
+            {
+                audioSource.Stop();
+                audioSource.loop = false; // Reset loop
+                audioSource.clip = null;  // Bersihkan clip
+            }
+            // =======================================
         }
     }
 }

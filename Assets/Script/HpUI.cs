@@ -9,6 +9,6 @@ public class HpUI : MonoBehaviour
 
     void Update ()
     {
-        hpText.text = "Hp: " + PlayerStats.Hp.ToString();
+        hpText.text = "" + PlayerStats.Hp.ToString();
     }
 }

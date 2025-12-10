@@ -16,14 +16,17 @@ public class Enemy : MonoBehaviour
     [HideInInspector] public float segmentProgress = 0f;
 
     [Header("Effects")]
-    public GameObject deathEffect;
+    public GameObject deathEffect;       // Drag Prefab Ledakan (VFX) ke sini
     public GameObject burnEffectPrefab;
+
+    [Header("UI Effects")] 
+    public GameObject damagePopupPrefab; // Drag Prefab DamagePopup ke sini
 
     // --- Burn system variables ---
     private bool isBurning = false;
     private int currentBurnDamage = 0;
-    private float burnInterval = 1f;   // Enemy-defined
-    private float burnDuration = 5f;   // Enemy-defined
+    private float burnInterval = 1f;   
+    private float burnDuration = 5f;   
     private float burnTimeElapsed = 0f;
     private GameObject activeBurnEffect;
     private Coroutine burnCoroutine;
@@ -33,7 +36,7 @@ public class Enemy : MonoBehaviour
     private float originalSpeed;
 
     // --- Enemy Settings ---
-    [HideInInspector]public int currentHealth;
+    [HideInInspector] public int currentHealth;
     private int maxHealth;
     private Transform startPoint;
     private Transform endPoint;
@@ -102,6 +105,21 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int amount)
     {
         currentHealth -= amount;
+
+        // --- MUNCULIN POPUP ANGKA ---
+        if (damagePopupPrefab != null)
+        {
+            Vector3 popupPos = transform.position + Vector3.up * 1.5f; 
+            GameObject popup = Instantiate(damagePopupPrefab, popupPos, Quaternion.identity);
+            
+            DamagePopup popupScript = popup.GetComponent<DamagePopup>();
+            if (popupScript != null)
+            {
+                popupScript.Setup(amount);
+            }
+        }
+        // ---------------------------
+
         currentHealth = Mathf.Max(currentHealth, 0);
         healthUI?.UpdateHealth(currentHealth);
 
@@ -123,7 +141,7 @@ public class Enemy : MonoBehaviour
             }
             return;
         }
-    StartBurn(damage);
+        StartBurn(damage);
     }
 
     private void StartBurn(int damage)
@@ -181,25 +199,26 @@ public class Enemy : MonoBehaviour
         {
             isFrozen = true;
             originalSpeed = speed;
-            speed *= slowMultiplier; // slow enemy
+            speed *= slowMultiplier; 
             StartCoroutine(FreezeTimer(duration));
         }
         else
         {
             StopAllCoroutines();
-            StartCoroutine(FreezeTimer(duration)); // refresh timer if hit again
+            StartCoroutine(FreezeTimer(duration)); 
         }
     }
 
     private IEnumerator FreezeTimer(float duration)
     {
         yield return new WaitForSeconds(duration);
-        speed = originalSpeed; // restore speed
+        speed = originalSpeed; 
         isFrozen = false;
     }
 
     void Die()
     {
+        // Tetap spawn efek ledakan (VFX)
         if (deathEffect != null)
         {
             GameObject effect = Instantiate(deathEffect, transform.position, Quaternion.identity);
@@ -216,10 +235,10 @@ public class Enemy : MonoBehaviour
         Destroy(gameObject);
     }
 
-
     void EndPath()
     {
         PlayerStats.Hp -= damageToPlayer;
+
         EnemyWaveManager.Instance.UnregisterEnemy(this);
         EnemyWaveManager.Instance.EnemyDied(this);
         Destroy(gameObject);

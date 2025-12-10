@@ -7,7 +7,10 @@ public class Node : MonoBehaviour
     public GameObject previewEmptyPrefab;   
     public GameObject previewOccupiedPrefab;
     public float emptyYOffset = 0.5f;
-    public float occupiedYOffset = 1f;      
+    public float occupiedYOffset = 1f;
+    
+    [Header("Node Settings")]
+    public bool blockTowerPlacement = false; // Toggle to prevent tower placement on this node
 
     private GameObject currentPreview;
     private Renderer rend;
@@ -70,6 +73,11 @@ public class Node : MonoBehaviour
     public bool HasObject()
     {
         return isOccupied;
+    }
+
+    public bool CanPlaceTower()
+    {
+        return !blockTowerPlacement && !isOccupied;
     }
 
     public void ClearNode()

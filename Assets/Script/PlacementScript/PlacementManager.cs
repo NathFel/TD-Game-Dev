@@ -16,10 +16,13 @@ public class PlacementManager : MonoBehaviour
 
     [Header("Ghost Settings")]
     public Material ghostMaterial;       // Transparent ghost material
+    public Material blockedGhostMaterial; // Red ghost material for blocked nodes
     public GameObject rangeSpherePrefab; // Transparent sphere prefab
+    public Color blockedSphereColor = Color.red; // Red color for blocked sphere
 
     // Store original materials for restoring
     private Dictionary<Renderer, Material[]> originalMaterials = new Dictionary<Renderer, Material[]>();
+    private Dictionary<Renderer, Color[]> originalColors = new Dictionary<Renderer, Color[]>();
 
     private void Awake()
     {
@@ -56,8 +59,13 @@ public class PlacementManager : MonoBehaviour
             if (rangeSphereInstance != null)
                 rangeSphereInstance.transform.position = buildPos + Vector3.up * 0.5f;
 
+            // Check if node is blocked and update colors accordingly
+            bool canPlace = node.CanPlaceTower();
+            UpdateGhostColor(canPlace);
+            UpdateSphereColor(canPlace);
+
             // Left click -> place
-            if (Input.GetMouseButtonDown(0) && !node.HasObject())
+            if (Input.GetMouseButtonDown(0) && canPlace)
             {
                 PlaceObject(node);
             }
@@ -97,7 +105,7 @@ public class PlacementManager : MonoBehaviour
 
     public void PlaceObject(Node node)
     {
-        if (objectToPlacePrefab == null || node.HasObject()) return;
+        if (objectToPlacePrefab == null || !node.CanPlaceTower()) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         return;
 
@@ -151,6 +159,38 @@ public class PlacementManager : MonoBehaviour
                 ghostMats[i] = ghostMaterial;
             }
             r.materials = ghostMats;
+        }
+    }
+
+    private void UpdateGhostColor(bool canPlace)
+    {
+        if (ghostInstance == null) return;
+
+        Material matToUse = canPlace ? ghostMaterial : (blockedGhostMaterial != null ? blockedGhostMaterial : ghostMaterial);
+
+        foreach (Renderer r in ghostInstance.GetComponentsInChildren<Renderer>())
+        {
+            Material[] mats = new Material[r.materials.Length];
+            for (int i = 0; i < mats.Length; i++)
+            {
+                mats[i] = matToUse;
+            }
+            r.materials = mats;
+        }
+    }
+
+    private void UpdateSphereColor(bool canPlace)
+    {
+        if (rangeSphereInstance == null) return;
+
+        Renderer sphereRenderer = rangeSphereInstance.GetComponent<Renderer>();
+        if (sphereRenderer != null)
+        {
+            Color targetColor = canPlace ? Color.white : blockedSphereColor;
+            foreach (Material mat in sphereRenderer.materials)
+            {
+                mat.color = targetColor;
+            }
         }
     }
 
