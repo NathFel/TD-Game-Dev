@@ -21,12 +21,10 @@ public class Spell : MonoBehaviour
     private float nextTickTime = 0f;
 
     [Header("Visuals")]
-    public GameObject impactPrefab; // AoE particle prefab
-    public Renderer spellRenderer;  // assign the spell mesh renderer here
+    public GameObject impactPrefab; // Efek Ledakan (Instant)
+    public GameObject lastingParticlesPrefab; // Efek Area/Lingkaran di tanah (Durasi)
+    public Renderer spellRenderer;  // Bola spell yang melayang
 
-    /// <summary>
-    /// Launch the spell projectile
-    /// </summary>
     public void Launch(Vector3 start, Vector3 target)
     {
         transform.position = start;
@@ -47,35 +45,79 @@ public class Spell : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / travelTime;
 
-            // Parabolic arc
+            // Gerakan Melengkung (Parabolic)
             float height = Mathf.Sin(t * Mathf.PI) * arcHeight;
             transform.position = Vector3.Lerp(startPos, targetPosition, t) + Vector3.up * height;
 
             yield return null;
         }
 
-        // Landed
+        // --- SAAT MENDARAT ---
         transform.position = targetPosition;
         hasLanded = true;
 
-        // Hide the spell visually
+        // 1. Sembunyikan Bola Spell
         if (spellRenderer != null)
             spellRenderer.enabled = false;
 
-        // Spawn impact visual
+        // 2. Spawn IMPACT (Ledakan DUAR!)
         if (impactPrefab != null)
         {
-            // Slightly above ground
-            Vector3 impactPos = new Vector3(targetPosition.x, 0.6f, targetPosition.z); 
+            // Munculkan agak tinggi dikit (y + 1) biar gak ketelen tanah
+            Vector3 impactPos = targetPosition + Vector3.up * 1f; 
             GameObject impact = Instantiate(impactPrefab, impactPos, Quaternion.identity);
+            
+            // Reset transform to avoid inherited scaling/rotation
+            impact.transform.rotation = Quaternion.identity;
+            impact.transform.localScale = Vector3.one; 
 
-            // X/Z scale based on radius, Y scale thin
-            impact.transform.localScale = new Vector3(radius * 2f, 0.3f, radius * 2f);
+            // Try to play ALL particle systems in the prefab hierarchy
+            var systems = impact.GetComponentsInChildren<ParticleSystem>(true);
+            if (systems != null && systems.Length > 0)
+            {
+                // Enable emission and play
+                foreach (var ps in systems)
+                {
+                    var emission = ps.emission;
+                    emission.enabled = true;
+                    ps.Play(true);
+                    // Force a small burst if emission was disabled in the asset
+                    ps.Emit(5);
+                }
 
-            Destroy(impact, Duration);
+                // Compute a safe lifetime: max of durations + lifetimes
+                float maxLifetime = 0f;
+                foreach (var ps in systems)
+                {
+                    var main = ps.main;
+                    float duration = main.duration;
+                    float lifetime = main.startLifetime.constantMax;
+                    maxLifetime = Mathf.Max(maxLifetime, duration + lifetime + 0.5f);
+                }
+                Destroy(impact, Mathf.Max(2f, maxLifetime));
+            }
+            else
+            {
+                // No particle systems found – keep object briefly so we can see it
+                Debug.LogWarning("Impact prefab has no ParticleSystem components in root or children.");
+                Destroy(impact, 3f);
+            }
         }
 
-        // Start AoE effect
+        // 3. Spawn LASTING PARTICLES (Bekas Area di Tanah)
+        if (lastingParticlesPrefab != null)
+        {
+            Vector3 groundPos = targetPosition + Vector3.up * 0.1f; // Dikit aja di atas tanah
+            GameObject particles = Instantiate(lastingParticlesPrefab, groundPos, Quaternion.identity);
+
+            // Sesuaikan lebar partikel dengan Radius Spell
+            // (Y dibikin tipis karena nempel tanah)
+            particles.transform.localScale = new Vector3(radius * 2f, 1f, radius * 2f);
+
+            Destroy(particles, Duration); // Hapus setelah durasi spell habis
+        }
+
+        // Mulai logika damage area
         nextTickTime = Time.time;
         StartCoroutine(ApplyAoE());
     }
@@ -98,15 +140,13 @@ public class Spell : MonoBehaviour
                             enemy.ApplyFreeze(freezeDuration, freezeSlowMultiplier);
                     }
                 }
-
                 nextTickTime = Time.time + interval;
             }
-
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        Destroy(gameObject); // finally destroy the spell object after AoE ends
+        Destroy(gameObject); // Hancurkan object spell utama
     }
 
     private void OnDrawGizmosSelected()

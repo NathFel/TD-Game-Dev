@@ -3,7 +3,10 @@ guid: a1e48d776100169498d8ae03b50c2a6f
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - enemyType: {instanceID: 0}
+  - deathEffect: {instanceID: 0}
+  - burnEffectPrefab: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

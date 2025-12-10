@@ -124,8 +124,9 @@ MonoBehaviour:
   moneyDrop: 50
   wavepointIndex: 0
   segmentProgress: 0
-  deathEffect: {fileID: 8360400350464209689, guid: 855337cc9cf1a054091fddb36dbbe998, type: 3}
-  burnEffectPrefab: {fileID: 4530448835926720786, guid: 551602df5a73d2847879f9dd4b7b4c35, type: 3}
+  deathEffect: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
+  burnEffectPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
+  currentHealth: 0
 --- !u!136 &186641663747144488
 CapsuleCollider:
   m_ObjectHideFlags: 0

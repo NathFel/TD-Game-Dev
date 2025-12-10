@@ -126,8 +126,9 @@ MonoBehaviour:
   moneyDrop: 50
   wavepointIndex: 0
   segmentProgress: 0
-  deathEffect: {fileID: 8360400350464209689, guid: 855337cc9cf1a054091fddb36dbbe998, type: 3}
-  burnEffectPrefab: {fileID: 4530448835926720786, guid: 551602df5a73d2847879f9dd4b7b4c35, type: 3}
+  deathEffect: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
+  burnEffectPrefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d, type: 3}
+  currentHealth: 0
 --- !u!114 &3067630798820264119
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,8 +144,6 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 2353490939804179826, guid: 5d3f0b798c437f54fb2564f19687b600, type: 3}
   healthBarOffset: {x: 0, y: 2, z: 0}
   fixedHealthBarScale: 1
-  hpTextPrefab: {fileID: 6449264485050426476, guid: e33d81622695ed748adbab4d89e197d3, type: 3}
-  hpTextOffset: {x: 0, y: 0.3, z: 0}
 --- !u!1 &2847915059861605049
 GameObject:
   m_ObjectHideFlags: 0

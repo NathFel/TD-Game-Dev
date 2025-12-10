@@ -127,5 +127,6 @@ MonoBehaviour:
   freezeSlowMultiplier: 0.5
   speed: 50
   arcHeight: 20
-  impactPrefab: {fileID: 0}
+  impactPrefab: {fileID: 5112403345868107898, guid: 6f34ef0d986e9db4199cf75805f79753, type: 3}
+  lastingParticlesPrefab: {fileID: 3280519133390621005, guid: a71be3e7990efb040a07565c43cbb198, type: 3}
   spellRenderer: {fileID: 0}
