@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Fire Ball
   artwork: {fileID: 0}
-  description: '-'
+  description: Hurl a fiery orb that explodes for area damage and applies burn.
   cardType: 1
   rarity: 0
   manaCost: 1

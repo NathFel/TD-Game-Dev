@@ -56,17 +56,17 @@ public class Turret : MonoBehaviour
             Debug.Log("AudioSource created automatically on " + gameObject.name);
         }
         
-        // === SETUP 3D AUDIO ===
-        audioSource.spatialBlend = 1f; // 1 = fully 3D, 0 = fully 2D
+        // === SETUP 2D AUDIO ===
+        audioSource.spatialBlend = 0f; // 0 = fully 2D
         audioSource.dopplerLevel = 0.5f;
         audioSource.maxDistance = 50f; // How far the sound can be heard
         audioSource.minDistance = 1f;  // Where the sound starts to attenuate
         // ============================
 
         // === TAMBAHAN AUDIO: Mainkan suara place saat tower muncul ===
-        if (audioSource != null && placeSound != null)
+        if (placeSound != null)
         {
-            audioSource.PlayOneShot(placeSound);
+            TDGameDev.Audio.Sfx2DPlayer.Play(placeSound);
         }
         // ============================================================
 
@@ -272,10 +272,9 @@ public class Turret : MonoBehaviour
         if (turretCard.bulletPrefab == null) return;
 
         // === TAMBAHAN AUDIO: Suara Tembak ===
-        if (audioSource != null && shootSound != null)
+        if (shootSound != null)
         {
-            // Gunakan PlayOneShot agar suara bisa menumpuk (kalau attack speed tinggi)
-            audioSource.PlayOneShot(shootSound);
+            TDGameDev.Audio.Sfx2DPlayer.Play(shootSound);
         }
         // ====================================
 
@@ -330,10 +329,10 @@ public class Turret : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
         }
         
-        if (audioSource != null && summonSound != null)
+        if (summonSound != null)
         {
             Debug.Log("Playing summon sound for chess tower");
-            audioSource.PlayOneShot(summonSound);
+            TDGameDev.Audio.Sfx2DPlayer.Play(summonSound);
         }
         else if (summonSound == null)
         {
@@ -363,6 +362,17 @@ public class Turret : MonoBehaviour
             {
                 audioSource.clip = laserLoopSound;
                 audioSource.loop = true; // Pastikan loop nyala
+                var mgr = TDGameDev.Audio.SfxManager.Instance;
+                if (mgr != null)
+                {
+                    var group = mgr.GetMixerGroup();
+                    if (group != null) audioSource.outputAudioMixerGroup = group;
+                    audioSource.volume = mgr.GetVolume();
+                }
+                else
+                {
+                    audioSource.volume = 1f;
+                }
                 audioSource.Play();
             }
             // ========================================

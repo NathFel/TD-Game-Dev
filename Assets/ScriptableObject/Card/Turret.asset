@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Basic Turret
   artwork: {fileID: 21300000, guid: eefd198f90234f34cb12d117237bad6b, type: 3}
-  description: '-'
+  description: Basic turret with steady single-target shots and slight pierce.
   cardType: 0
   towerPrefab: {fileID: 2735528682194251564, guid: 011a31972d1c2fd4484b94eea75446de, type: 3}
   bulletPrefab: {fileID: 3228110950488566109, guid: 1010419beaff4ae4ab8641c718520331, type: 3}

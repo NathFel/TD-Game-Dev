@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Chess King
   artwork: {fileID: 0}
-  description: 
+  description: Summons chess minions that march forward and tank hits for you.
   cardType: 0
   rarity: 2
   manaCost: 3

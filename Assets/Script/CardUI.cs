@@ -75,12 +75,18 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         if (currentMode == CardDisplayMode.Hand && deckManager != null)
             deckManager.hoveredIndex = handIndex;
+
+        // Show tooltip on hover
+        TDGameDev.UI.TooltipManager.Instance?.Show(CardData);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (currentMode == CardDisplayMode.Hand && deckManager != null)
             deckManager.hoveredIndex = -1;
+
+        // Hide tooltip when leaving
+        TDGameDev.UI.TooltipManager.Instance?.Hide();
     }
 
     // ===== Setup Card =====

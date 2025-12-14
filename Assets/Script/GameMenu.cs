@@ -5,7 +5,8 @@ public class GameMenu : MonoBehaviour
 {
     [Header("UI References")]
     public GameObject pausePanel;   // Masukkan Panel Menu di sini
-    public Slider volumeSlider;     // Masukkan Slider Volume di sini
+    public Slider volumeSlider;     // Masukkan Slider Volume musik (BGM) di sini
+    public Slider sfxVolumeSlider;  // Masukkan Slider Volume SFX di sini
 
     [Header("Audio References")]
     public AudioSource musicSource; // Masukkan Object yang muter lagu background di sini
@@ -20,13 +21,21 @@ public class GameMenu : MonoBehaviour
             pausePanel.SetActive(false);
         }
 
-        // Kalau ada settingan volume slider, samain posisinya dengan volume asli lagunya
+        // Sinkronkan slider BGM dengan volume musik awal
         if (musicSource != null && volumeSlider != null)
         {
             volumeSlider.value = musicSource.volume;
             
             // Kode ini biar slidernya otomatis manggil fungsi SetVolume pas digeser
             volumeSlider.onValueChanged.AddListener(SetVolume);
+        }
+
+        // Sinkronkan slider SFX dengan nilai global (jika ada SfxManager)
+        var sfxMgr = TDGameDev.Audio.SfxManager.Instance;
+        if (sfxMgr != null && sfxVolumeSlider != null)
+        {
+            sfxVolumeSlider.value = sfxMgr.GetVolume();
+            sfxVolumeSlider.onValueChanged.AddListener(SetSfxVolume);
         }
     }
 
@@ -60,6 +69,16 @@ public class GameMenu : MonoBehaviour
         if (musicSource != null)
         {
             musicSource.volume = volume;
+        }
+    }
+
+    // Dipanggil otomatis oleh slider SFX
+    public void SetSfxVolume(float volume)
+    {
+        var sfxMgr = TDGameDev.Audio.SfxManager.Instance;
+        if (sfxMgr != null)
+        {
+            sfxMgr.SetVolumeFromSlider(volume);
         }
     }
     

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Catapult
   artwork: {fileID: 0}
-  description: 
+  description: Lobs arcing shells that explode for large AoE damage and lingering burn.
   cardType: 0
   rarity: 1
   manaCost: 1

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Missile Launcher
   artwork: {fileID: 21300000, guid: a2d0b34c5e3b73748817e7a9bd12aecc, type: 3}
-  description: '-'
+  description: Homing missiles that splash on impact and bounce between targets.
   cardType: 0
   rarity: 2
   manaCost: 1

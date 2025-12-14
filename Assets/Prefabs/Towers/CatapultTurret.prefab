@@ -344,7 +344,7 @@ MonoBehaviour:
   partToRotate: {fileID: 5993589594048284710}
   firePoint: {fileID: 8349327110084907046}
   lineRenderer: {fileID: 0}
-  impactEffect: {fileID: 0}
+  impactEffect: {fileID: 2504214343621411456, guid: 3ed0d324122d7b24eaec75c55c74aafc, type: 3}
   targetingMode: 0
   yRotationOffset: 0
   animator: {fileID: 2840853498531408273}
@@ -353,6 +353,7 @@ MonoBehaviour:
   placeSound: {fileID: 8300000, guid: 37ad5bc43b5a1e54d8b42513c8820c8c, type: 3}
   shootSound: {fileID: 8300000, guid: 0decdc8845adbc44cb8511a6bf540bce, type: 3}
   laserLoopSound: {fileID: 0}
+  summonSound: {fileID: 0}
   rangeSpherePrefab: {fileID: 9057766349655395459, guid: ecc06ce0db9af4744b260bcf86809744, type: 3}
 --- !u!82 &2009058188765564315
 AudioSource:

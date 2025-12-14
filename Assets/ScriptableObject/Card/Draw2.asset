@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Draw 2
   artwork: {fileID: 0}
-  description: 
+  description: Draw 2 additional cards.
   cardType: 2
   rarity: 0
   manaCost: 1

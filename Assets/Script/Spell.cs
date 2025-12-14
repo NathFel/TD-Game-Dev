@@ -25,6 +25,7 @@ public class Spell : MonoBehaviour
     [Header("Visuals")]
     public GameObject impactPrefab; // Efek Ledakan (Instant)
     public GameObject lastingParticlesPrefab; // Efek Area/Lingkaran di tanah (Durasi)
+    public GameObject burnAreaVFXPrefab; // VFX untuk burn area
     public Renderer spellRenderer;  // Bola spell yang melayang
 
     [Header("Audio SFX")]
@@ -39,6 +40,11 @@ public class Spell : MonoBehaviour
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
+        // Force 2D audio for spell SFX
+        if (audioSource != null)
+        {
+            audioSource.spatialBlend = 0f; // 0 = fully 2D
+        }
     }
 
     public void Launch(Vector3 start, Vector3 target)
@@ -50,7 +56,7 @@ public class Spell : MonoBehaviour
         // --- AUDIO: Play Launch Sound ---
         if (launchSFX != null)
         {
-            audioSource.PlayOneShot(launchSFX);
+            TDGameDev.Audio.Sfx2DPlayer.Play(launchSFX);
         }
 
         StartCoroutine(MoveToTarget());
@@ -82,8 +88,7 @@ public class Spell : MonoBehaviour
         // --- AUDIO: Play Impact Sound ---
         if (impactSFX != null)
         {
-            // Menggunakan PlayOneShot agar bisa menumpuk dengan suara launch jika belum selesai
-            audioSource.PlayOneShot(impactSFX);
+            TDGameDev.Audio.Sfx2DPlayer.Play(impactSFX);
         }
 
         // 1. Sembunyikan Bola Spell
@@ -141,12 +146,29 @@ public class Spell : MonoBehaviour
 
     private IEnumerator ApplyAoE()
     {
+        // --- VISUALS: Instantiate burn area VFX ---
+        if (burnAreaVFXPrefab != null)
+        {
+            Instantiate(burnAreaVFXPrefab, targetPosition, Quaternion.identity);
+        }
+        
         // --- AUDIO: Play Loop Sound (Jika ada) ---
         if (aoeLoopSFX != null)
         {
             audioSource.clip = aoeLoopSFX;
             audioSource.loop = true; // Set agar mengulang terus
-            audioSource.volume = loopVolume; // Atur volume sesuai setting
+            // Route to mixer and apply global volume
+            var mgr = TDGameDev.Audio.SfxManager.Instance;
+            if (mgr != null)
+            {
+                var group = mgr.GetMixerGroup();
+                if (group != null) audioSource.outputAudioMixerGroup = group;
+                audioSource.volume = loopVolume * mgr.GetVolume();
+            }
+            else
+            {
+                audioSource.volume = loopVolume;
+            }
             audioSource.Play();
         }
 
@@ -173,7 +195,10 @@ public class Spell : MonoBehaviour
             // --- AUDIO: Fade out volume di akhir durasi (smooth transition) ---
             if (aoeLoopSFX != null && elapsed > Duration - 0.5f)
             {
-                audioSource.volume = Mathf.Lerp(loopVolume, 0f, (elapsed - (Duration - 0.5f)) / 0.5f);
+                float baseVol = loopVolume;
+                var mgr = TDGameDev.Audio.SfxManager.Instance;
+                if (mgr != null) baseVol *= mgr.GetVolume();
+                audioSource.volume = Mathf.Lerp(baseVol, 0f, (elapsed - (Duration - 0.5f)) / 0.5f);
             }
             
             yield return null;

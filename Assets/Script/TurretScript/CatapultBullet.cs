@@ -4,6 +4,7 @@ using System.Collections;
 public class CatapultBullet : MonoBehaviour
 {
     private TowerData data;
+    public GameObject burnAreaVFXPrefab; // VFX for burn area display
 
     private Vector3 targetPos;
     private bool landed = false;
@@ -58,6 +59,10 @@ public class CatapultBullet : MonoBehaviour
         if (landed) return;
         landed = true;
 
+        // Hide the bullet immediately
+        var renderer = GetComponent<Renderer>();
+        if (renderer != null) renderer.enabled = false;
+
         Collider[] hits = Physics.OverlapSphere(targetPos, data.AoERadius);
         foreach (var h in hits)
         {
@@ -69,16 +74,13 @@ public class CatapultBullet : MonoBehaviour
             }
         }
 
-        // SPAWN IMPACT VISUAL
-        if (data.impactPrefab != null)
+        // SPAWN BURN AREA VFX
+        if (burnAreaVFXPrefab != null)
         {
-            Vector3 impactPos = new Vector3(targetPos.x, 0.6f, targetPos.z);
-            impactObj = Instantiate(data.impactPrefab, impactPos, Quaternion.identity);
-            impactObj.transform.localScale = new Vector3(
-                data.AoERadius * 2f,
-                0.3f,
-                data.AoERadius * 2f
-            );
+            Vector3 vfxPos = new Vector3(targetPos.x, 0.6f, targetPos.z);
+            GameObject burnVFX = Instantiate(burnAreaVFXPrefab, vfxPos, Quaternion.identity);
+            // Destroy burn VFX after AoE duration
+            Destroy(burnVFX, data.AoEDuration);
         }
 
         // START AoE DAMAGE OVER TIME AFTER FIRST INTERVAL

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Replenish
   artwork: {fileID: 0}
-  description: Discard Hand Draw 5
+  description: Discard your hand, then draw 5 new cards.
   cardType: 2
   rarity: 0
   manaCost: 2

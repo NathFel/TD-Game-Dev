@@ -19,6 +19,10 @@ public class Enemy : MonoBehaviour
     public GameObject deathEffect;       // Drag Prefab Ledakan (VFX) ke sini
     public GameObject burnEffectPrefab;
 
+    [Header("Audio SFX")]
+    public AudioClip deathSFX;            // Drag clip suara mati musuh
+    private AudioSource audioSource;      // 2D audio source for enemy
+
     [Header("UI Effects")] 
     public GameObject damagePopupPrefab; // Drag Prefab DamagePopup ke sini
 
@@ -55,6 +59,12 @@ public class Enemy : MonoBehaviour
         currentHealth = maxHealth;
         healthUI?.SetMaxHealth(maxHealth);
         damageToPlayer = enemyType.enemyDamage;
+
+        // Setup 2D AudioSource
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.spatialBlend = 0f; // 2D audio
     }
 
     void OnEnable()
@@ -223,6 +233,12 @@ public class Enemy : MonoBehaviour
         {
             GameObject effect = Instantiate(deathEffect, transform.position, Quaternion.identity);
             Destroy(effect, 5f);
+        }
+
+        // Play death SFX (2D) using independent one-shot player
+        if (deathSFX != null)
+        {
+            TDGameDev.Audio.Sfx2DPlayer.Play(deathSFX);
         }
 
         StopBurn();
