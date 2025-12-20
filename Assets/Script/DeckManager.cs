@@ -402,7 +402,7 @@ public class DeckManager : MonoBehaviour
                 {
                     PlayerMana.Instance.Spend(card.manaCost);
                     playingCards.Remove(card);
-                    OnUtilityPlaced(card);
+                    OnCardPlaced(card);
                 },
                 onCanceled: () => OnPlacementCanceled()
             );
@@ -436,10 +436,18 @@ public class DeckManager : MonoBehaviour
                 {
                     PlayerMana.Instance.Spend(card.manaCost);
 
-                    if (card.utilityEffect != null)
-                        card.utilityEffect.Execute();
+                    if (card.utilityEffectPrefab != null)
+                    {
+                        GameObject effectGO = Instantiate(card.utilityEffectPrefab);
+                        UtilityEffectMB effect = effectGO.GetComponent<UtilityEffectMB>();
+                        effect.Execute();
+
+                        Destroy(effectGO); // optional if the effect is temporary
+                    }
                     else
-                        Debug.LogWarning("No utility effect attached!");
+                    {
+                        Debug.LogWarning($"Card {card.cardName} has no utilityEffectPrefab assigned!");
+                    }
 
                     playingCards.Remove(card);
                     OnCardPlaced(card);

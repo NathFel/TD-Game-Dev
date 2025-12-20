@@ -35,7 +35,7 @@ public class Card : ScriptableObject
     public float freezeAmount = 0f;
     
     [Header("Utility Card Data")]
-    public UtilityEffect utilityEffect;
+    public GameObject utilityEffectPrefab;
 
     public enum CardType
     {

@@ -10,9 +10,8 @@ public class ShopManager : MonoBehaviour
 
     [Header("UI")]
     public GameObject shopPanel;
-    public TextMeshProUGUI moneyText;
     public Transform shopContent;
-    public int cardsToShow = 4;
+    public int cardsToShow = 7;
     public float costDistanceFromCard = 20f;
     public Button exitShopButton;
 
@@ -24,8 +23,13 @@ public class ShopManager : MonoBehaviour
     public GameObject destroyPanel;
     public Transform destroyContent;
     public Button confirmDestroyButton;
+    public Button cancelDestroyButton;
     public TextMeshProUGUI destroyCostText;
     public int destroyCardCost = 30;
+
+    [Header("Destroy Limits")]
+    public int maxDestroyPerShop = 1;
+    private int destroyUsedThisShop = 0;
 
     private Action onShopClosed;
     private DeckManager deckManager;
@@ -42,32 +46,26 @@ public class ShopManager : MonoBehaviour
 
         deckManager = FindObjectOfType<DeckManager>();
         if (deckManager == null)
-            Debug.LogError("No DeckManager found in scene!");
+            Debug.LogError("No DeckManager found!");
 
-        // Assign listeners
-        if (exitShopButton != null)
-            exitShopButton.onClick.AddListener(CloseShop);
-
-        if (destroyCardButton != null)
-            destroyCardButton.onClick.AddListener(OpenDestroyMenu);
-
-        if (confirmDestroyButton != null)
-            confirmDestroyButton.onClick.AddListener(ConfirmDestroyCard);
+        exitShopButton.onClick.AddListener(CloseShop);
+        destroyCardButton.onClick.AddListener(OpenDestroyMenu);
+        confirmDestroyButton.onClick.AddListener(ConfirmDestroyCard);
     }
+
+    // ===================== SHOP =====================
 
     public void OpenShop(Action onClose)
     {
         onShopClosed = onClose;
+
         shopPanel.SetActive(true);
         destroyPanel.SetActive(false);
-        UpdateMoneyUI();
-        PopulateShop();
-    }
 
-    private void UpdateMoneyUI()
-    {
-        if (moneyText != null)
-            moneyText.text = $"Money: {PlayerStats.Money}";
+        destroyUsedThisShop = 0; // reset for this shop
+        destroyCardButton.interactable = true; // enable button
+
+        PopulateShop();
     }
 
     private void PopulateShop()
@@ -75,71 +73,70 @@ public class ShopManager : MonoBehaviour
         foreach (Transform child in shopContent)
             Destroy(child.gameObject);
 
-        List<Card> tempPool = new List<Card>(availableCards);
+        SpawnCards(CardUI.Rarity.Common, 4);
+        SpawnCards(CardUI.Rarity.Rare, 2);
+        SpawnCards(CardUI.Rarity.Legendary, 1);
+    }
 
-        for (int i = 0; i < cardsToShow && tempPool.Count > 0; i++)
+    private void SpawnCards(CardUI.Rarity rarity, int count)
+    {
+        List<Card> pool = availableCards.FindAll(c => c.rarity == rarity);
+        if (pool.Count == 0) return;
+
+        for (int i = 0; i < count; i++)
         {
-            int idx = UnityEngine.Random.Range(0, tempPool.Count);
-            Card card = tempPool[idx];
-            tempPool.RemoveAt(idx);
+            Card card = pool[UnityEngine.Random.Range(0, pool.Count)];
 
-            // Instantiate Card UI
             CardUI cu = Instantiate(deckManager.cardUIPrefab, shopContent);
             cu.Setup(card, null);
             cu.SetInteractable(true);
 
-            // Add BuyCard listener
             Button btn = cu.GetComponent<Button>();
-            if (btn != null)
-            {
-                btn.onClick.RemoveAllListeners();
-                btn.onClick.AddListener(() => BuyCard(card, cu.gameObject));
-            }
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => BuyCard(card, cu.gameObject));
 
-            // Add TMP cost text below card
-            GameObject costGO = new GameObject("CostText", typeof(RectTransform));
-            costGO.transform.SetParent(cu.transform);
-            costGO.transform.localScale = Vector3.one;
-
-            TextMeshProUGUI costText = costGO.AddComponent<TextMeshProUGUI>();
-            costText.text = $"Cost: {card.cost}";
-            costText.alignment = TextAlignmentOptions.Center;
-            costText.fontSize = 18;
-
-            RectTransform rt = costGO.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 0);
-            rt.anchorMax = new Vector2(1, 0);
-            rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -costDistanceFromCard);
-            rt.sizeDelta = new Vector2(0, 20);
+            AddCostText(cu.transform, card.cost);
         }
     }
 
     private void BuyCard(Card card, GameObject cardGO)
     {
-        if (PlayerStats.Money < card.cost)
-        {
-            Debug.Log("Not enough money for " + card.cardName);
-            return;
-        }
+        if (PlayerStats.Money < card.cost) return;
+        if (deckManager.currentDeck.Count >= deckManager.maxDeckSize) return;
 
-        if (deckManager.currentDeck.Count >= deckManager.maxDeckSize)
-        {
-            Debug.Log("Deck is full! Cannot buy " + card.cardName);
-            return;
-        }
-
-        // Deduct money
         PlayerStats.Money -= card.cost;
         deckManager.AddCardToDeck(card);
-        UpdateMoneyUI();
 
-        // Remove the card from shop UI
         Destroy(cardGO);
+    }
+
+    private void AddCostText(Transform parent, int cost)
+    {
+        GameObject costGO = new GameObject("CostText", typeof(RectTransform));
+        costGO.transform.SetParent(parent);
+        costGO.transform.localScale = Vector3.one;
+
+        TextMeshProUGUI text = costGO.AddComponent<TextMeshProUGUI>();
+        text.text = $"Cost: {cost}";
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = 50;
+
+        RectTransform rt = costGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 0);
+        rt.anchorMax = new Vector2(1, 0);
+        rt.pivot = new Vector2(0.5f, 1);
+        rt.anchoredPosition = new Vector2(0, -costDistanceFromCard);
+        rt.sizeDelta = new Vector2(0, 20);
     }
 
     private void OpenDestroyMenu()
     {
+        if (destroyUsedThisShop >= maxDestroyPerShop)
+        {
+            Debug.Log("Destroy card can only be used once per shop!");
+            return;
+        }
+
         if (PlayerStats.Money < destroyCardCost)
         {
             Debug.Log("Not enough money to destroy a card!");
@@ -212,19 +209,29 @@ public class ShopManager : MonoBehaviour
         // Deduct cost and remove card
         PlayerStats.Money -= destroyCardCost;
         deckManager.RemoveCardFromDeck(selectedDestroyCard);
-        UpdateMoneyUI();
 
         Debug.Log("Destroyed card: " + selectedDestroyCard.cardName);
+
+        destroyUsedThisShop++;
 
         // Refresh UI
         PopulateDestroyList();
         destroyPanel.SetActive(false);
     }
 
+    public void CancelDestroy(){
+
+        destroyPanel.SetActive(false);
+        selectedDestroyCard = null; // reset selection
+
+    }
+
     public void CloseShop()
     {
         shopPanel.SetActive(false);
         destroyPanel.SetActive(false);
+        destroyUsedThisShop = 0;
+        destroyCardButton.interactable = true;
         onShopClosed?.Invoke();
     }
 }

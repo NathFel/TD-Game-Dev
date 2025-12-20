@@ -25,13 +25,23 @@ MonoBehaviour:
     fireRate: 1
     turnSpeed: 10
     baseDamage: 50
+    isSummoner: 0
+    minionPrefab: {fileID: 0}
+    minionSpeed: 5
+    minionSpawnYOffset: 1
     useLaser: 0
     laserLength: 20
     laserWidth: 1
+    isCatapult: 0
+    arcHeight: 5
+    damageOverTime: 10
     isSeeking: 0
     pierce: 0
     bounce: 0
     AoERadius: 0
+    impactPrefab: {fileID: 0}
+    AoEDuration: 0.1
+    AoEInterval: 1
     bulletSpeed: 70
     burnChance: 0
     burnDamage: 1
@@ -47,4 +57,4 @@ MonoBehaviour:
   isFreezeSpell: 0
   freezeDuration: 0
   freezeAmount: 0
-  utilityEffect: {fileID: 11400000, guid: caa0b4ec5e58240458daeb6b18e91c31, type: 2}
+  utilityEffectPrefab: {fileID: 3371448809084749304, guid: 1c05b45aede991042bff81711058c0a5, type: 3}

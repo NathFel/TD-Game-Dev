@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using TMPro;
 using System.Linq;
 
 public class RewardUIManager : MonoBehaviour
@@ -27,10 +26,9 @@ public class RewardUIManager : MonoBehaviour
     // Weight multipliers per rarity (adjust freely)
     private readonly Dictionary<CardUI.Rarity, float> rarityWeights = new Dictionary<CardUI.Rarity, float>
     {
-        { CardUI.Rarity.Common, 70f },
-        { CardUI.Rarity.Rare, 20f },
-        { CardUI.Rarity.Epic, 8f },
-        { CardUI.Rarity.Legendary, 2f }
+        { CardUI.Rarity.Common, 65f },
+        { CardUI.Rarity.Rare, 25f },
+        { CardUI.Rarity.Legendary, 10f }
     };
 
     private System.Action onRewardComplete;
@@ -89,23 +87,6 @@ public class RewardUIManager : MonoBehaviour
                 btn.onClick.RemoveAllListeners();
                 btn.onClick.AddListener(() => SelectCard(card, cu.gameObject));
             }
-
-            // TMP label below the card
-            GameObject costGO = new GameObject("RewardLabel", typeof(RectTransform));
-            costGO.transform.SetParent(cu.transform);
-            costGO.transform.localScale = Vector3.one;
-
-            TextMeshProUGUI costText = costGO.AddComponent<TextMeshProUGUI>();
-            costText.text = "Add to Deck";
-            costText.alignment = TextAlignmentOptions.Center;
-            costText.fontSize = 18;
-
-            RectTransform rt = costGO.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 0);
-            rt.anchorMax = new Vector2(1, 0);
-            rt.pivot = new Vector2(0.5f, 1);
-            rt.anchoredPosition = new Vector2(0, -costDistanceFromCard);
-            rt.sizeDelta = new Vector2(0, 20);
         }
     }
 

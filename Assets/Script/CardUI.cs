@@ -31,7 +31,7 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     private RectTransform rectTransform;
 
     // --- Rarity Enum ---
-    public enum Rarity { Common, Rare, Epic, Legendary }
+    public enum Rarity { Common, Rare, Legendary }
 
     // --- Display Modes ---
     public enum CardDisplayMode
@@ -152,9 +152,6 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
                 break;
             case Rarity.Rare:
                 hexColor = "#0e56db"; // Blue (FF dibuang biar bisa diatur alpha-nya)
-                break;
-            case Rarity.Epic:
-                hexColor = "#9B59B6"; // Magenta/Purple
                 break;
             case Rarity.Legendary:
                 hexColor = "#F1C40F"; // Gold
