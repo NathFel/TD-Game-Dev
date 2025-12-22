@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Mana Recovery
   artwork: {fileID: 0}
-  description: Regain mana over time to fuel more plays.
+  descriptionTemplate: Recover 2 Mana
+  description: Recover 2 Mana
   cardType: 2
   rarity: 0
   manaCost: 0

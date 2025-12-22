@@ -13,6 +13,13 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     [SerializeField] private Image rarityBackground;
     [SerializeField] private TMP_Text manaCostText;
 
+    [Header("Card Type Icon")]
+    [SerializeField] private Image cardTypeIcon;
+    [SerializeField] private Sprite towerIcon;
+    [SerializeField] private Sprite spellIcon;
+    [SerializeField] private Sprite utilityIcon;
+
+
     // --- FITUR BARU: Slider Transparansi ---
     [Range(0f, 1f)] 
     [SerializeField] private float cardAlpha = 0.85f; // Default agak transparan (85%)
@@ -124,9 +131,33 @@ public class CardUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             });
         }
 
+        SetCardTypeIcon(card.cardType);
+
         // Hide buy button by default
         if (buyButton != null)
             buyButton.gameObject.SetActive(false);
+    }
+
+    private void SetCardTypeIcon(Card.CardType type)
+    {
+        if (cardTypeIcon == null) return;
+
+        switch (type)
+        {
+            case Card.CardType.Tower:
+                cardTypeIcon.sprite = towerIcon;
+                break;
+
+            case Card.CardType.Spell:
+                cardTypeIcon.sprite = spellIcon;
+                break;
+
+            case Card.CardType.Utility:
+                cardTypeIcon.sprite = utilityIcon;
+                break;
+        }
+
+        cardTypeIcon.gameObject.SetActive(cardTypeIcon.sprite != null);
     }
 
     private void OnCardClicked()

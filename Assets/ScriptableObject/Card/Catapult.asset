@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Catapult
   artwork: {fileID: 0}
-  description: Lobs arcing shells that explode for large AoE damage and lingering burn.
+  descriptionTemplate: Deal {baseDamage} {damageInterval} with AoE {AoERadius}
+  description: Deal 20 every 0.5 second with AoE 10
   cardType: 0
   rarity: 1
   manaCost: 1
@@ -25,6 +26,10 @@ MonoBehaviour:
     fireRate: 0.5
     turnSpeed: 10
     baseDamage: 20
+    isSummoner: 0
+    minionPrefab: {fileID: 0}
+    minionSpeed: 5
+    minionSpawnYOffset: 1
     useLaser: 0
     laserLength: 20
     laserWidth: 1
@@ -53,4 +58,4 @@ MonoBehaviour:
   isFreezeSpell: 0
   freezeDuration: 0
   freezeAmount: 0
-  utilityEffect: {fileID: 0}
+  utilityEffectPrefab: {fileID: 0}

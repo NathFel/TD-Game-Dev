@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Chess King
   artwork: {fileID: 0}
-  description: Summons chess minions that march forward and tank hits for you.
+  descriptionTemplate: Summon Minion with {baseDamage} Hp {damageInterval}
+  description: Summon Minion with 150 Hp every 0.1 second
   cardType: 0
   rarity: 2
   manaCost: 3
@@ -57,4 +58,4 @@ MonoBehaviour:
   isFreezeSpell: 0
   freezeDuration: 0
   freezeAmount: 0
-  utilityEffect: {fileID: 0}
+  utilityEffectPrefab: {fileID: 0}

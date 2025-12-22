@@ -6,7 +6,8 @@ public class Card : ScriptableObject
     [Header("General Info")]
     public string cardName;
     public Sprite artwork;
-    [TextArea] public string description;
+    [TextArea] public string descriptionTemplate;
+    [HideInInspector] public string description;
     public CardType cardType;
     public CardUI.Rarity rarity = CardUI.Rarity.Common;
     public int manaCost = 1;
@@ -43,6 +44,86 @@ public class Card : ScriptableObject
         Spell,
         Utility
     }
+
+    #if UNITY_EDITOR
+    private void OnValidate()
+    {
+        description = GenerateDescription();
+    }
+    #endif
+
+    private string GenerateDescription()
+    {
+        string d = descriptionTemplate;
+
+        // =========================
+        // GENERAL
+        // =========================
+        d = d.Replace("{cardName}", cardName);
+        d = d.Replace("{rarity}", rarity.ToString());
+        d = d.Replace("{manaCost}", manaCost.ToString());
+        d = d.Replace("{cost}", cost.ToString());
+        d = d.Replace("{upgradeLevel}", upgradeLevel.ToString());
+
+        // =========================
+        // SPELL
+        // =========================
+        d = d.Replace("{spellPower}", spellPower.ToString());
+        d = d.Replace("{spellDuration}", spellDuration.ToString("0.##"));
+        d = d.Replace("{spellInterval}", spellInterval.ToString("0.##"));
+        d = d.Replace("{spellRadius}", spellRadius.ToString("0.##"));
+        d = d.Replace("{spellSpeed}", spellSpeed.ToString("0.##"));
+
+        // =========================
+        // FREEZE
+        // =========================
+        d = d.Replace("{isFreezeSpell}", isFreezeSpell ? "Yes" : "No");
+        d = d.Replace("{freezeDuration}", freezeDuration.ToString("0.##"));
+        d = d.Replace("{freezeAmount}", (freezeAmount * 100f).ToString("0") + "%");
+
+        // =========================
+        // TOWER
+        // =========================
+        if (towerData != null)
+        {
+            d = d.Replace("{range}", towerData.range.ToString("0.##"));
+            
+            string intervalText = towerData.fireRate <= 0
+                ? "instantly"
+                : $"every {towerData.fireRate:0.##} second{(towerData.fireRate > 1 ? "s" : "")}";
+
+            d = d.Replace("{damageInterval}", intervalText);
+            
+            d = d.Replace("{turnSpeed}", towerData.turnSpeed.ToString("0.##"));
+            d = d.Replace("{baseDamage}", towerData.baseDamage.ToString());
+
+            d = d.Replace("{isSummoner}", towerData.isSummoner ? "Yes" : "No");
+            d = d.Replace("{minionSpeed}", towerData.minionSpeed.ToString("0.##"));
+            d = d.Replace("{minionSpawnYOffset}", towerData.minionSpawnYOffset.ToString("0.##"));
+
+            d = d.Replace("{useLaser}", towerData.useLaser ? "Yes" : "No");
+            d = d.Replace("{laserLength}", towerData.laserLength.ToString("0.##"));
+            d = d.Replace("{laserWidth}", towerData.laserWidth.ToString("0.##"));
+
+            d = d.Replace("{isCatapult}", towerData.isCatapult ? "Yes" : "No");
+            d = d.Replace("{arcHeight}", towerData.arcHeight.ToString("0.##"));
+            d = d.Replace("{damageOverTime}", towerData.damageOverTime.ToString());
+            d = d.Replace("{isSeeking}", towerData.isSeeking ? "Yes" : "No");
+            d = d.Replace("{pierce}", towerData.pierce.ToString());
+            d = d.Replace("{bounce}", towerData.bounce.ToString());
+            d = d.Replace("{AoERadius}", towerData.AoERadius.ToString("0.##"));
+            d = d.Replace("{AoEDuration}", towerData.AoEDuration.ToString("0.##"));
+            d = d.Replace("{AoEInterval}", towerData.AoEInterval.ToString("0.##"));
+            d = d.Replace("{bulletSpeed}", towerData.bulletSpeed.ToString("0.##"));
+
+            d = d.Replace("{burnChance}", (towerData.burnChance * 100f).ToString("0") + "%");
+            d = d.Replace("{burnDamage}", towerData.burnDamage.ToString());
+        }
+
+        return d;
+    }
+
+
 }
 
 [System.Serializable]

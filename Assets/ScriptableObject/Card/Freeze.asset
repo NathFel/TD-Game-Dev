@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d061559bb9b778e4590ae51f7865b42d, type: 3}
   m_Name: Freeze
   m_EditorClassIdentifier: 
-  cardName: Freeze
+  cardName: Blizard
   artwork: {fileID: 0}
-  description: Freeze a small area, slowing enemies and buying time to react.
+  descriptionTemplate: Deal {spellPower} damage overtime and freeze enemy for {spellDuration}
+    second
+  description: Deal 20 damage overtime and freeze enemy for 5 second
   cardType: 1
-  rarity: 0
+  rarity: 1
   manaCost: 1
   towerPrefab: {fileID: 0}
   bulletPrefab: {fileID: 0}
@@ -25,13 +27,23 @@ MonoBehaviour:
     fireRate: 1
     turnSpeed: 10
     baseDamage: 50
+    isSummoner: 0
+    minionPrefab: {fileID: 0}
+    minionSpeed: 5
+    minionSpawnYOffset: 1
     useLaser: 0
     laserLength: 20
     laserWidth: 1
+    isCatapult: 0
+    arcHeight: 5
+    damageOverTime: 10
     isSeeking: 0
     pierce: 0
     bounce: 0
     AoERadius: 0
+    impactPrefab: {fileID: 0}
+    AoEDuration: 0.1
+    AoEInterval: 1
     bulletSpeed: 70
     burnChance: 0
     burnDamage: 1
@@ -39,12 +51,12 @@ MonoBehaviour:
   upgradeLevel: 0
   spellPrefab: {fileID: 950649848767671616, guid: 006741e6b60447545b84ddf284f16d26, type: 3}
   spellImpactPrefab: {fileID: 8121421420560569822, guid: 7de2bfc295b91a64fbcbaba1de1df7ce, type: 3}
-  spellPower: 0
-  spellDuration: 10
+  spellPower: 20
+  spellDuration: 5
   spellInterval: 0.5
   spellRadius: 2
   spellSpeed: 0
   isFreezeSpell: 1
   freezeDuration: 0.5
   freezeAmount: 0
-  utilityEffect: {fileID: 0}
+  utilityEffectPrefab: {fileID: 0}

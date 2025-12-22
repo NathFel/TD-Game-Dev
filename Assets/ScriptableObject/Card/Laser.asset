@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: Laser
   artwork: {fileID: 21300000, guid: cac08ee65f486e64f8eaa4a764443046, type: 3}
-  description: Continuous beam that burns enemies over time at medium range.
+  descriptionTemplate: 
+  description: 
   cardType: 0
+  rarity: 0
+  manaCost: 1
   towerPrefab: {fileID: 275050849610828336, guid: 69b34a9dd2703834fb6df4e1898edf06, type: 3}
   bulletPrefab: {fileID: 0}
   towerData:
@@ -23,20 +26,36 @@ MonoBehaviour:
     fireRate: 1
     turnSpeed: 100
     baseDamage: 0
+    isSummoner: 0
+    minionPrefab: {fileID: 0}
+    minionSpeed: 5
+    minionSpawnYOffset: 1
     useLaser: 1
     laserLength: 15
     laserWidth: 1
+    isCatapult: 0
+    arcHeight: 5
+    damageOverTime: 10
     isSeeking: 0
     pierce: 0
     bounce: 0
     AoERadius: 0
+    impactPrefab: {fileID: 0}
+    AoEDuration: 0.1
+    AoEInterval: 1
     bulletSpeed: 0
     burnChance: 1
     burnDamage: 10
   cost: 0
   upgradeLevel: 0
   spellPrefab: {fileID: 0}
+  spellImpactPrefab: {fileID: 0}
   spellPower: 0
   spellDuration: 0
+  spellInterval: 0.5
   spellRadius: 0
   spellSpeed: 0
+  isFreezeSpell: 0
+  freezeDuration: 0
+  freezeAmount: 0
+  utilityEffectPrefab: {fileID: 0}
